@@ -1,14 +1,14 @@
-package selectaction
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tmoscrip/jaipur/models"
+	"github.com/tmoscrip/jaipur/internal/game"
 )
 
 type SelectActionMenu struct {
-	Game            *models.GameState
+	Game            *game.GameState
 	options         []string
 	transitions     []string
 	Cursor          *int
@@ -27,7 +27,7 @@ func (e *NoGoodsInHandError) Error() string {
 	return "You have no goods in your hand to sell"
 }
 
-func New(game *models.GameState) SelectActionMenu {
+func NewSelectAction(game *game.GameState) SelectActionMenu {
 	var selectedOptions = make([]int, 4)
 	return SelectActionMenu{
 		Game: game,
@@ -104,7 +104,7 @@ func (v SelectActionMenu) validate(cursor int) (bool, error) {
 			return false, &TooManyInHandError{}
 		}
 		if v.Game.MarketCamelCount() == 0 {
-			return false, &models.NoCamelsInMarketError{}
+			return false, &game.NoCamelsInMarketError{}
 		}
 		// sell goods
 	case 3:

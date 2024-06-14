@@ -1,4 +1,4 @@
-package takemultiple
+package models
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/lipgloss/table"
 
+	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/models"
 )
 
-type MenuOption struct {
-	Column   int
+type menuOption struct {
+	column   int
 	Label    string
 	Selected bool
 	Index    int
@@ -20,9 +20,9 @@ type MenuOption struct {
 
 var TableBorder = lipgloss.NewStyle().Foreground(tui.Silver).Background(lipgloss.Color("#000000"))
 
-func (m MenuOption) FormatRight(activeCol int, activeCursor int) string {
+func (m menuOption) FormatRight(activeCol int, activeCursor int) string {
 	var cursor = fmt.Sprintf(" ")
-	if m.Column == activeCol && m.Index == activeCursor {
+	if m.column == activeCol && m.Index == activeCursor {
 		cursor = fmt.Sprintf(">")
 	}
 	var checked = fmt.Sprintf(" ")
@@ -32,9 +32,9 @@ func (m MenuOption) FormatRight(activeCol int, activeCursor int) string {
 	return fmt.Sprintf("%s [%s] %s", cursor, checked, m.Label)
 }
 
-func (m MenuOption) FormatLeft(activeCol int, activeCursor int) string {
+func (m menuOption) FormatLeft(activeCol int, activeCursor int) string {
 	var cursor = fmt.Sprintf(" ")
-	if m.Column == activeCol && m.Index == activeCursor {
+	if m.column == activeCol && m.Index == activeCursor {
 		cursor = fmt.Sprintf("<")
 	}
 	var checked = fmt.Sprintf(" ")
@@ -44,39 +44,39 @@ func (m MenuOption) FormatLeft(activeCol int, activeCursor int) string {
 	return fmt.Sprintf("%s [%s] %s", m.Label, checked, cursor)
 }
 
-func (m MenuOption) CursorActive(cursorIdx int) bool {
+func (m menuOption) CursorActive(cursorIdx int) bool {
 	return cursorIdx == m.Index
 }
 
-func (m MenuOption) ColumnActive(columnIdx int) bool {
-	return columnIdx == m.Column
+func (m menuOption) columnActive(columnIdx int) bool {
+	return columnIdx == m.column
 }
 
 type TakeMultiple struct {
-	Game         *models.GameState
-	columns      map[int]map[int]MenuOption
+	Game         *game.GameState
+	columns      map[int]map[int]menuOption
 	Cursor       *int
-	activeColumn *int
+	activecolumn *int
 }
 
-func (v TakeMultiple) ActiveColumn() map[int]MenuOption {
-	return v.columns[*v.activeColumn]
+func (v TakeMultiple) Activecolumn() map[int]menuOption {
+	return v.columns[*v.activecolumn]
 }
 
-func New(game *models.GameState) TakeMultiple {
-	market := make(map[int]MenuOption)
-	hand := make(map[int]MenuOption)
+func NewTakeMultiple(game *game.GameState) TakeMultiple {
+	market := make(map[int]menuOption)
+	hand := make(map[int]menuOption)
 
-	columns := make(map[int]map[int]MenuOption)
+	columns := make(map[int]map[int]menuOption)
 	columns[0] = hand
 	columns[1] = market
 	for i, card := range game.ActivePlayer().Hand {
-		hand[i] = MenuOption{Column: 0, Label: card.String(), Selected: false, Index: i}
+		hand[i] = menuOption{column: 0, Label: card.String(), Selected: false, Index: i}
 	}
 	for i, card := range game.Market {
-		market[i] = MenuOption{Column: 1, Label: card.String(), Selected: false, Index: i}
+		market[i] = menuOption{column: 1, Label: card.String(), Selected: false, Index: i}
 	}
-	return TakeMultiple{Game: game, Cursor: new(int), activeColumn: new(int), columns: columns}
+	return TakeMultiple{Game: game, Cursor: new(int), activecolumn: new(int), columns: columns}
 }
 
 func (v TakeMultiple) Init() tea.Cmd {
@@ -103,8 +103,8 @@ func (v TakeMultiple) View() string {
 			return lipgloss.NewStyle().Align(lipgloss.Center)
 		}).Width(40).Headers("Hand", "Market").Border(lipgloss.NormalBorder()).BorderStyle(TableBorder)
 	for i := 0; i < max; i++ {
-		// rows = append(rows, []string{v.columns[0][i].FormatLeft(*v.activeColumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activeColumn, *v.Cursor)})
-		t.Row(v.columns[0][i].FormatLeft(*v.activeColumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activeColumn, *v.Cursor))
+		// rows = append(rows, []string{v.columns[0][i].FormatLeft(*v.activecolumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activecolumn, *v.Cursor)})
+		t.Row(v.columns[0][i].FormatLeft(*v.activecolumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activecolumn, *v.Cursor))
 	}
 
 	s += t.Render()
@@ -120,8 +120,8 @@ func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			if *v.activeColumn == 1 {
-				*v.activeColumn = 0
+			if *v.activecolumn == 1 {
+				*v.activecolumn = 0
 				return v, nil, "", nil
 			}
 			return v, nil, "selectActionMenu", nil
@@ -137,17 +137,17 @@ func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 			}
 		}
 		if msg.String() == "left" {
-			if *v.activeColumn > 0 {
-				*v.activeColumn = *v.activeColumn - 1
+			if *v.activecolumn > 0 {
+				*v.activecolumn = *v.activecolumn - 1
 			}
 		}
 		if msg.String() == "right" {
-			if *v.activeColumn < 1 {
-				*v.activeColumn = *v.activeColumn + 1
+			if *v.activecolumn < 1 {
+				*v.activecolumn = *v.activecolumn + 1
 			}
 		}
 		if msg.String() == "enter" {
-			col := v.columns[*v.activeColumn]
+			col := v.columns[*v.activecolumn]
 			item := col[*v.Cursor]
 			item.Selected = !item.Selected
 			col[*v.Cursor] = item

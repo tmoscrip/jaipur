@@ -6,16 +6,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/tmoscrip/jaipur/internal/game"
+	"github.com/tmoscrip/jaipur/internal/logger"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/logger"
 	"github.com/tmoscrip/jaipur/models"
-	"github.com/tmoscrip/jaipur/views/endround"
-	"github.com/tmoscrip/jaipur/views/nameentry"
-	"github.com/tmoscrip/jaipur/views/selectaction"
-	"github.com/tmoscrip/jaipur/views/sellcards"
-	"github.com/tmoscrip/jaipur/views/takecamels"
-	"github.com/tmoscrip/jaipur/views/takemultiple"
-	"github.com/tmoscrip/jaipur/views/takeone"
 )
 
 type MyMainModel interface {
@@ -25,7 +19,7 @@ type MyMainModel interface {
 
 type MainModel struct {
 	ActiveView   MyMainModel
-	Game         *models.GameState
+	Game         *game.GameState
 	ErrorMessage string
 	ShowTopMenu  bool
 }
@@ -58,22 +52,22 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch transition {
 	case "selectActionMenu":
 		m.ShowTopMenu = true
-		m.ActiveView = selectaction.New(m.Game)
+		m.ActiveView = models.NewSelectAction(m.Game)
 	case "takeOneCard":
 		m.ShowTopMenu = true
-		m.ActiveView = takeone.New(m.Game)
+		m.ActiveView = models.NewTakeOne(m.Game)
 	case "takeSeveralCards":
 		m.ShowTopMenu = true
-		m.ActiveView = takemultiple.New(m.Game)
+		m.ActiveView = models.NewTakeMultiple(m.Game)
 	case "takeCamels":
 		m.ShowTopMenu = true
-		m.ActiveView = takecamels.New(m.Game)
+		m.ActiveView = models.NewTakeCamels(m.Game)
 	case "sellCards":
 		m.ShowTopMenu = true
-		m.ActiveView = sellcards.New(m.Game)
+		m.ActiveView = models.NewSellCards(m.Game)
 	case "endRound":
 		m.ShowTopMenu = false
-		m.ActiveView = endround.New(m.Game)
+		m.ActiveView = models.NewEndRound(m.Game)
 	}
 	return m, cmd
 }
@@ -82,7 +76,7 @@ var numberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
 
 func (m MainModel) formatDiscarded() string {
 	discarded := ""
-	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather, models.Camel} {
+	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather, game.Camel} {
 		count := 0
 		for _, card := range m.Game.Discarded {
 			if card == resource {
@@ -98,7 +92,7 @@ func (m MainModel) formatDiscarded() string {
 
 func (m MainModel) formatRemainingTokensColumn() string {
 	s := ""
-	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather} {
+	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather} {
 		count := 0
 		for _, token := range m.Game.ResourceTokens[resource] {
 			if token != 0 {
@@ -118,7 +112,7 @@ func (m MainModel) formatRemainingTokensColumn() string {
 
 func (m MainModel) formatDiscardedColumn() string {
 	s := ""
-	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather, models.Camel} {
+	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather, game.Camel} {
 		count := 0
 		for _, card := range m.Game.Discarded {
 			if card == resource {
@@ -175,8 +169,8 @@ func (m MainModel) View() string {
 }
 
 func initialModel() tea.Model {
-	var g = models.NewGame()
-	var v = nameentry.New(&g)
+	var g = game.NewGame()
+	var v = models.NewNameEntry(&g)
 	return MainModel{
 		ActiveView:  v,
 		Game:        &g,

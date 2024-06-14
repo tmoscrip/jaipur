@@ -1,11 +1,11 @@
-package sellcards
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/models"
 )
 
 type MenuOption struct {
@@ -27,12 +27,12 @@ func (m MenuOption) Format(activeCursor int) string {
 }
 
 type SellCards struct {
-	Game    *models.GameState
+	Game    *game.GameState
 	options []MenuOption
 	Cursor  *int
 }
 
-func New(game *models.GameState) SellCards {
+func NewSellCards(game *game.GameState) SellCards {
 	options := make([]MenuOption, len(game.ActivePlayer().Hand))
 	for i, card := range game.ActivePlayer().Hand {
 		options[i] = MenuOption{Index: i, Label: card.String(), Selected: false}

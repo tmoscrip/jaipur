@@ -1,11 +1,11 @@
-package models
+package game
 
 import (
 	"fmt"
 	"math/rand/v2"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tmoscrip/jaipur/logger"
+	"github.com/tmoscrip/jaipur/internal/logger"
 )
 
 type GameState struct {

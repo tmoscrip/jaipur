@@ -1,18 +1,18 @@
-package endround
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/models"
 )
 
 type EndRound struct {
-	Game *models.GameState
+	Game *game.GameState
 }
 
-func New(game *models.GameState) EndRound {
+func NewEndRound(game *game.GameState) EndRound {
 	return EndRound{game}
 }
 

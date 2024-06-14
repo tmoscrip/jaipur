@@ -1,21 +1,21 @@
-package takeone
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/game"
+	"github.com/tmoscrip/jaipur/internal/logger"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/logger"
-	"github.com/tmoscrip/jaipur/models"
 )
 
 type TakeOneCard struct {
-	Game       *models.GameState
+	Game       *game.GameState
 	Cursor     *int
 	confirming *bool
 }
 
-func New(game *models.GameState) TakeOneCard {
+func NewTakeOne(game *game.GameState) TakeOneCard {
 	return TakeOneCard{Game: game, Cursor: new(int), confirming: new(bool)}
 }
 

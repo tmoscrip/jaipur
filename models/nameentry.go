@@ -1,17 +1,17 @@
-package nameentry
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/tmoscrip/jaipur/models"
+	"github.com/tmoscrip/jaipur/internal/game"
 )
 
 type NameEntry struct {
-	Game *models.GameState
+	Game *game.GameState
 }
 
-func New(game *models.GameState) NameEntry {
+func NewNameEntry(game *game.GameState) NameEntry {
 	return NameEntry{Game: game}
 }
 

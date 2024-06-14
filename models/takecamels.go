@@ -1,18 +1,18 @@
-package takecamels
+package models
 
 import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
-	"github.com/tmoscrip/jaipur/models"
 )
 
 type TakeCamels struct {
-	Game *models.GameState
+	Game *game.GameState
 }
 
-func New(game *models.GameState) TakeCamels {
+func NewTakeCamels(game *game.GameState) TakeCamels {
 	return TakeCamels{Game: game}
 }
 

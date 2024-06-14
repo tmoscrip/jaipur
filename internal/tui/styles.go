@@ -2,7 +2,7 @@ package tui
 
 import (
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tmoscrip/jaipur/models"
+	"github.com/tmoscrip/jaipur/internal/game"
 )
 
 const Width = 80
@@ -56,7 +56,7 @@ var TitleStyle = lipgloss.NewStyle().
 	Bold(true).Border(lipgloss.RoundedBorder()).
 	Padding(0, 4)
 
-func RenderCard(card models.ResourceType) string {
+func RenderCard(card game.ResourceType) string {
 	style := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		Padding(1).
@@ -65,7 +65,7 @@ func RenderCard(card models.ResourceType) string {
 	return style.Render(card.String())
 }
 
-func RenderCards(cards []models.ResourceType) string {
+func RenderCards(cards []game.ResourceType) string {
 	var cs = make([]string, 0)
 	for _, card := range cards {
 		cs = append(cs, RenderCard(card))
