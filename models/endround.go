@@ -28,7 +28,7 @@ func (v EndRound) View() string {
 		s += fmt.Sprintf("%s: %d\n", player.Name, player.Score)
 	}
 
-	s += fmt.Sprintf("\nWinner: %s\n\n", v.Game.WinningPlayer().Name)
+	s += fmt.Sprintf("\nWinner: %s\n\n", v.Game.RoundWinner().Name)
 
 	s += "Press enter to start the next round"
 	return s

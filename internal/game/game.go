@@ -18,7 +18,8 @@ type Game struct {
 	ActivePlayerIdx *int
 }
 
-func (g *Game) WinningPlayer() *Player {
+// Returns the player with the highest score, or nil if the scores are tied.
+func (g *Game) RoundWinner() *Player {
 	if g.Players[0].Score == g.Players[1].Score {
 		return nil
 	}
@@ -93,6 +94,8 @@ func NewGame() Game {
 		player.Hand = g.Deck[0:5]
 		logger.Message(fmt.Sprintf("Player %d hand: %s", i, player.Hand))
 		g.Deck = g.Deck[5:]
+
+		// TODO: what if the redraw has camels?
 		var camels = player.MoveCamelsToHerd()
 		// refill hand accounting for removed camels
 		for j := 0; j < camels; j++ {
@@ -290,8 +293,8 @@ func (g *Game) nextPlayer() bool {
 		} else if player1Camels > player0Camels {
 			g.Players[1].AddScore(5)
 		}
-		if g.WinningPlayer() != nil {
-			g.WinningPlayer().Rounds++
+		if g.RoundWinner() != nil {
+			g.RoundWinner().Rounds++
 		}
 		return true
 	}
