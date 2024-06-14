@@ -1,8 +1,11 @@
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"github.com/charmbracelet/lipgloss"
+	"github.com/tmoscrip/jaipur/models"
+)
 
-const Width = 60
+const Width = 80
 
 const Black = lipgloss.Color("#000000")
 const Night = lipgloss.Color("#111111")
@@ -52,3 +55,21 @@ var TitleStyle = lipgloss.NewStyle().
 	Background(lipgloss.Color("#000000")).
 	Bold(true).Border(lipgloss.RoundedBorder()).
 	Padding(0, 4)
+
+func RenderCard(card models.ResourceType) string {
+	style := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		Padding(1).
+		Background(card.Color())
+
+	return style.Render(card.String())
+}
+
+func RenderCards(cards []models.ResourceType) string {
+	var cs = make([]string, 0)
+	for _, card := range cards {
+		cs = append(cs, RenderCard(card))
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Left, cs...)
+}

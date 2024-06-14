@@ -395,22 +395,43 @@ const (
 	Camel   ResourceType = 6
 )
 
+func (c ResourceType) Color() lipgloss.Color {
+	switch c {
+	case Diamond:
+		return lipgloss.Color("#00FFFF")
+	case Gold:
+		return lipgloss.Color("#FFD700")
+	case Silver:
+		return lipgloss.Color("#C0C0C0")
+	case Cloth:
+		return lipgloss.Color("#FF00AA")
+	case Spice:
+		return lipgloss.Color("#FFA500")
+	case Leather:
+		return lipgloss.Color("#8B4513")
+	case Camel:
+		return lipgloss.Color("#FFD777")
+	default:
+		return lipgloss.Color("#FFFFFF")
+	}
+}
+
 func (c ResourceType) String() string {
 	switch c {
 	case Diamond:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#00FFFF")).Render("Dia")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Dia")
 	case Gold:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#FFD700")).Render("Gld")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Gld")
 	case Silver:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#C0C0C0")).Render("Slv")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Slv")
 	case Cloth:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#FF00FF")).Render("Cth")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Cth")
 	case Spice:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#FFA500")).Render("Spi")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Spi")
 	case Leather:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#8B4513")).Render("Lth")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Lth")
 	case Camel:
-		return lipgloss.NewStyle().Foreground(lipgloss.Color("#FFD700")).Render("Cam")
+		return lipgloss.NewStyle().Foreground(c.Color()).Render("Cml")
 	}
 	return ""
 }

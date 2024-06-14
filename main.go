@@ -80,7 +80,7 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 var numberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
 
-func (m MainModel) FormatDiscarded() string {
+func (m MainModel) formatDiscarded() string {
 	discarded := ""
 	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather, models.Camel} {
 		count := 0
@@ -96,8 +96,8 @@ func (m MainModel) FormatDiscarded() string {
 	return discarded
 }
 
-func (m MainModel) FormatRemainingTokens() string {
-	remaining := ""
+func (m MainModel) formatRemainingTokensColumn() string {
+	s := ""
 	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather} {
 		count := 0
 		for _, token := range m.Game.ResourceTokens[resource] {
@@ -106,24 +106,57 @@ func (m MainModel) FormatRemainingTokens() string {
 			}
 		}
 		if count != 0 {
-			remaining += numberStyle.Render(fmt.Sprintf("%dx%s ", count, resource))
+			var bars = ""
+			for i := 0; i < count; i++ {
+				bars += "|"
+			}
+			s += fmt.Sprintf("%s %s\n", bars, resource.String())
 		}
 	}
-	return remaining
+	return s
+}
+
+func (m MainModel) formatDiscardedColumn() string {
+	s := ""
+	for _, resource := range []models.ResourceType{models.Diamond, models.Gold, models.Silver, models.Cloth, models.Spice, models.Leather, models.Camel} {
+		count := 0
+		for _, card := range m.Game.Discarded {
+			if card == resource {
+				count++
+			}
+		}
+		if count != 0 {
+			var bars = ""
+			for i := 0; i < count; i++ {
+				bars += "|"
+			}
+			s += fmt.Sprintf("%s (%d) %s\n", bars, count, resource.String())
+		}
+	}
+	return s
 }
 
 func (m MainModel) View() string {
 	s := ""
 	if m.ShowTopMenu {
-		s += fmt.Sprintf("Player %d: %s     Rounds: %d\n", *m.Game.ActivePlayerIdx+1, m.Game.ActivePlayer().Name, m.Game.ActivePlayer().Rounds)
-		s += fmt.Sprintf("Score: %d    Herd: %d\n", m.Game.ActivePlayer().Score, m.Game.ActivePlayer().Herd)
-		s += fmt.Sprintf("Market: %s\n", m.Game.Market)
-		s += fmt.Sprintf("Discarded: %s\n", m.FormatDiscarded())
-		s += fmt.Sprintf("Remaining tokens: %s\n", m.FormatRemainingTokens())
-		s += fmt.Sprintf("Your hand: %s", m.Game.ActivePlayer().Hand)
-	}
-	if len(s) > 0 {
-		s = tui.TopMenuStyle.Render(s)
+
+		menuLeft := ""
+		menuRight := ""
+
+		menuLeft += fmt.Sprintf("Player %d: %s        Rounds: %d\n", *m.Game.ActivePlayerIdx+1, m.Game.ActivePlayer().Name, m.Game.ActivePlayer().Rounds)
+		menuLeft += fmt.Sprintf("Score: %d            Herd: %d\n", m.Game.ActivePlayer().Score, m.Game.ActivePlayer().Herd)
+		if len(m.Game.Discarded) > 0 {
+			menuLeft += fmt.Sprintf("Discarded\n%s\n", m.formatDiscarded())
+		}
+		menuLeft += fmt.Sprintf("Market:\n%s\n", tui.RenderCards(m.Game.Market))
+		menuLeft += fmt.Sprintf("Your hand:\n%s", tui.RenderCards(m.Game.ActivePlayer().Hand))
+
+		columns := m.formatRemainingTokensColumn()
+		rightStyle := lipgloss.NewStyle().Width(tui.Width - lipgloss.Width(menuLeft) - lipgloss.Width(columns)).Align(lipgloss.Right)
+
+		menuRight += rightStyle.Render(fmt.Sprintf("Tokens\n%s\n", columns))
+
+		s = tui.TopMenuStyle.Render(lipgloss.JoinHorizontal(0, menuLeft, menuRight))
 		s += "\n"
 	}
 
