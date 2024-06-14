@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/tui"
 	"github.com/tmoscrip/jaipur/logger"
 	"github.com/tmoscrip/jaipur/models"
 )
@@ -23,10 +24,8 @@ func (v TakeOneCard) Init() tea.Cmd {
 }
 
 func (v TakeOneCard) View() string {
-	var s = ""
-	s += fmt.Sprintf("Player: %s\n", v.Game.ActivePlayer().Name)
-	s += fmt.Sprintf("Market: %s\n", v.Game.Market)
-	s += fmt.Sprintf("Your hand: %s\n\n", v.Game.ActivePlayer().Hand)
+	var s = tui.TitleStyle.Render("Take one card")
+	s += "\n"
 	confirm := ""
 	if *v.confirming {
 		confirm = fmt.Sprintf(" (confirm %s)", v.Game.Market[*v.Cursor])

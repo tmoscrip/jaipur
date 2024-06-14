@@ -18,13 +18,13 @@ type SelectActionMenu struct {
 type TooManyInHandError struct{}
 
 func (e *TooManyInHandError) Error() string {
-	return "You have too many cards in hand"
+	return "You have too many cards in your hand to do that"
 }
 
 type NoGoodsInHandError struct{}
 
 func (e *NoGoodsInHandError) Error() string {
-	return "You have no goods in hand to sell"
+	return "You have no goods in your hand to sell"
 }
 
 func New(game *models.GameState) SelectActionMenu {

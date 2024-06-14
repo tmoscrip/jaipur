@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/tui"
 	"github.com/tmoscrip/jaipur/models"
 )
 
@@ -20,7 +21,8 @@ func (v EndRound) Init() tea.Cmd {
 }
 
 func (v EndRound) View() string {
-	var s = "End of round!\n"
+	var s = tui.TitleStyle.Render("End of round!")
+	s += "\n\n"
 	s += "Scores:\n"
 	for _, player := range v.Game.Players {
 		s += fmt.Sprintf("%s: %d\n", player.Name, player.Score)

@@ -114,7 +114,6 @@ func (m MainModel) FormatRemainingTokens() string {
 
 func (m MainModel) View() string {
 	s := ""
-	borderStyle := lipgloss.NewStyle().Width(tui.Width).Align(lipgloss.Left).Padding(1, 3).Background(tui.EerieBlack).Foreground(tui.WhiteSmoke2).Border(lipgloss.RoundedBorder()).BorderBackground(tui.DavysGray).BorderForeground(tui.Night)
 	if m.ShowTopMenu {
 		s += fmt.Sprintf("Player %d: %s     Rounds: %d\n", *m.Game.ActivePlayerIdx+1, m.Game.ActivePlayer().Name, m.Game.ActivePlayer().Rounds)
 		s += fmt.Sprintf("Score: %d    Herd: %d\n", m.Game.ActivePlayer().Score, m.Game.ActivePlayer().Herd)
@@ -124,7 +123,7 @@ func (m MainModel) View() string {
 		s += fmt.Sprintf("Your hand: %s", m.Game.ActivePlayer().Hand)
 	}
 	if len(s) > 0 {
-		s = borderStyle.Render(s)
+		s = tui.TopMenuStyle.Render(s)
 		s += "\n"
 	}
 

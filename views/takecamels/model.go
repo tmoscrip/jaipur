@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/tui"
 	"github.com/tmoscrip/jaipur/models"
 )
 
@@ -21,7 +22,7 @@ func (v TakeCamels) Init() tea.Cmd {
 
 func (v TakeCamels) View() string {
 	var s = ""
-	s += fmt.Sprintf("Take %d camels?\n", v.Game.MarketCamelCount())
+	s += tui.TitleStyle.Render(fmt.Sprintf("Take %d camels?", v.Game.MarketCamelCount()))
 	return s
 }
 

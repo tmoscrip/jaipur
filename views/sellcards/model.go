@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/tmoscrip/jaipur/internal/tui"
 	"github.com/tmoscrip/jaipur/models"
 )
 
@@ -44,8 +45,8 @@ func (v SellCards) Init() tea.Cmd {
 }
 
 func (v SellCards) View() string {
-	s := "Sell cards\n"
-	s += "-------------\n"
+	s := tui.TitleStyle.Render("Sell cards")
+	s += "\n"
 
 	for _, card := range v.options {
 		s += fmt.Sprintf("%s\n", card.Format(*v.Cursor))
