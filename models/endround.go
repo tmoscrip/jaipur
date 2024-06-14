@@ -9,10 +9,10 @@ import (
 )
 
 type EndRound struct {
-	Game *game.GameState
+	Game *game.Game
 }
 
-func NewEndRound(game *game.GameState) EndRound {
+func NewEndRound(game *game.Game) EndRound {
 	return EndRound{game}
 }
 

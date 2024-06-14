@@ -19,7 +19,7 @@ type MyMainModel interface {
 
 type MainModel struct {
 	ActiveView   MyMainModel
-	Game         *game.GameState
+	Game         *game.Game
 	ErrorMessage string
 	ShowTopMenu  bool
 }

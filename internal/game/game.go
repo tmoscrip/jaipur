@@ -8,17 +8,17 @@ import (
 	"github.com/tmoscrip/jaipur/internal/logger"
 )
 
-type GameState struct {
+type Game struct {
 	Deck            []ResourceType
 	Discarded       []ResourceType
 	BonusTokens     map[int][]int // cards required -> points awarded
 	ResourceTokens  map[ResourceType][]int
 	Market          []ResourceType
-	Players         []PlayerState
+	Players         []Player
 	ActivePlayerIdx *int
 }
 
-func (g *GameState) WinningPlayer() *PlayerState {
+func (g *Game) WinningPlayer() *Player {
 	if g.Players[0].Score == g.Players[1].Score {
 		return nil
 	}
@@ -32,10 +32,10 @@ func (g *GameState) WinningPlayer() *PlayerState {
 	return winner
 }
 
-func NewGame() GameState {
-	var g = GameState{}
+func NewGame() Game {
+	var g = Game{}
 	g.ActivePlayerIdx = new(int)
-	g.Players = make([]PlayerState, 2)
+	g.Players = make([]Player, 2)
 	g.Deck = make([]ResourceType, 0)
 	g.Discarded = make([]ResourceType, 0)
 	for i := 0; i < 6; i++ {
@@ -89,7 +89,7 @@ func NewGame() GameState {
 	g.ResourceTokens[Leather] = []int{4, 3, 2, 1, 1, 1, 1, 1, 1}
 
 	for i := 0; i < 2; i++ {
-		var player = PlayerState{}
+		var player = Player{}
 		player.Hand = g.Deck[0:5]
 		logger.Message(fmt.Sprintf("Player %d hand: %s", i, player.Hand))
 		g.Deck = g.Deck[5:]
@@ -105,11 +105,11 @@ func NewGame() GameState {
 	return g
 }
 
-func (g *GameState) ActivePlayer() *PlayerState {
+func (g *Game) ActivePlayer() *Player {
 	return &g.Players[*g.ActivePlayerIdx]
 }
 
-func (g *GameState) MarketCamelCount() int {
+func (g *Game) MarketCamelCount() int {
 	var count = 0
 	for _, card := range g.Market {
 		if card == Camel {
@@ -125,7 +125,7 @@ func (e *TooManyInHandError) Error() string {
 	return "Your hand would have more than 7 cards"
 }
 
-func (g *GameState) PlayerTakeOne(marketIndex int) (bool, error) {
+func (g *Game) PlayerTakeOne(marketIndex int) (bool, error) {
 	g.ActivePlayer().Hand = append(g.ActivePlayer().Hand, g.Market[marketIndex])
 	g.Market[marketIndex] = g.Deck[0]
 	g.Deck = g.Deck[1:]
@@ -141,7 +141,7 @@ func (e *NoCamelsInMarketError) Error() string {
 	return "There are no camels in the market to take"
 }
 
-func (g *GameState) PlayerTakeCamels() (bool, error) {
+func (g *Game) PlayerTakeCamels() (bool, error) {
 	if g.MarketCamelCount() == 0 {
 		return false, &NoCamelsInMarketError{}
 	}
@@ -177,7 +177,7 @@ func (e *TakeMultipleCountMismatch) Error() string {
 PlayerTakeMultiple takes cards from the player's hand and the market and swaps them.
 Parameters are indexes of the cards to take from the hand and the market.
 */
-func (g *GameState) PlayerTakeMultiple(hand []int, market []int) (bool, error) {
+func (g *Game) PlayerTakeMultiple(hand []int, market []int) (bool, error) {
 	if len(hand) != len(market) {
 		return false, &TakeMultipleCountMismatch{}
 	}
@@ -215,7 +215,7 @@ func (e *SellCardsMismatchedResourcesError) Error() string {
 	return "You can only sell one type of resource at a time"
 }
 
-func (g *GameState) PlayerSellCards(indexes []int) (bool, error) {
+func (g *Game) PlayerSellCards(indexes []int) (bool, error) {
 	mismatch := false
 	for i := 0; i < len(indexes)-1; i++ {
 		if g.ActivePlayer().Hand[indexes[i]] != g.ActivePlayer().Hand[indexes[i+1]] {
@@ -248,11 +248,11 @@ func (g *GameState) PlayerSellCards(indexes []int) (bool, error) {
 	return false, nil
 }
 
-func (g *GameState) AddToDiscard(cards []ResourceType) {
+func (g *Game) AddToDiscard(cards []ResourceType) {
 	g.Discarded = append(g.Discarded, cards...)
 }
 
-func (g *GameState) ShouldRoundEnd() bool {
+func (g *Game) ShouldRoundEnd() bool {
 	depletedResourceTokens := 0
 	for _, rt := range []ResourceType{Diamond, Gold, Silver, Cloth, Spice, Leather} {
 		if len(g.ResourceTokens[rt]) == 0 {
@@ -267,7 +267,7 @@ func (g *GameState) ShouldRoundEnd() bool {
 	return depletedResourceTokens >= 3 || cardsRemaining < 5 || len(g.Deck) == 0
 }
 
-func (g *GameState) nextPlayer() bool {
+func (g *Game) nextPlayer() bool {
 	g.ActivePlayer().MoveCamelsToHerd()
 	newIdx := (*g.ActivePlayerIdx + 1) % 2
 	*g.ActivePlayerIdx = newIdx
@@ -298,7 +298,7 @@ func (g *GameState) nextPlayer() bool {
 	return false
 }
 
-func (g *GameState) StartRound() {
+func (g *Game) StartRound() {
 	newGame := NewGame()
 	players := newGame.Players
 	players[0].Rounds = g.Players[0].Rounds
@@ -307,7 +307,7 @@ func (g *GameState) StartRound() {
 	*g = newGame
 }
 
-func (g *GameState) nextResourceToken(rt ResourceType) int {
+func (g *Game) nextResourceToken(rt ResourceType) int {
 	if len(g.ResourceTokens[rt]) == 0 {
 		return 0
 	}
@@ -317,7 +317,7 @@ func (g *GameState) nextResourceToken(rt ResourceType) int {
 	return score
 }
 
-func (g *GameState) nextBonusToken(cardsScored int) int {
+func (g *Game) nextBonusToken(cardsScored int) int {
 	if len(g.BonusTokens[cardsScored]) == 0 {
 		return 0
 	}
@@ -327,72 +327,16 @@ func (g *GameState) nextBonusToken(cardsScored int) int {
 	return score
 }
 
-type PlayerState struct {
-	Name   string
-	Herd   int
-	Hand   []ResourceType
-	Score  int
-	Rounds int
-}
-
-func (p *PlayerState) ResourcesInHand(rt ResourceType) int {
-	var count = 0
-	for _, card := range p.Hand {
-		if card == rt {
-			count++
-		}
-	}
-	return count
-}
-
-func (p *PlayerState) MoveCamelsToHerd() int {
-	camelIndexes := make([]int, 0)
-	for j, card := range p.Hand {
-		if card == Camel {
-			camelIndexes = append(camelIndexes, j)
-		}
-	}
-	var removed = p.RemoveIndexesFromHand(camelIndexes)
-	p.Herd += len(removed)
-	return len(removed)
-}
-
-func (p *PlayerState) RemoveIndexesFromHand(indexes []int) []ResourceType {
-	originalHand := p.Hand
-	newHand := make([]ResourceType, 0)
-	removedResources := make([]ResourceType, 0)
-
-	indexMap := make(map[int]struct{}, len(indexes))
-	for _, idx := range indexes {
-		indexMap[idx] = struct{}{}
-	}
-
-	for i, resource := range originalHand {
-		if _, found := indexMap[i]; found {
-			removedResources = append(removedResources, resource)
-		} else {
-			newHand = append(newHand, resource)
-		}
-	}
-
-	p.Hand = newHand
-	return removedResources
-}
-
-func (p *PlayerState) AddScore(score int) {
-	p.Score = p.Score + score
-}
-
 type ResourceType int
 
 const (
-	Diamond ResourceType = 0
-	Gold    ResourceType = 1
-	Silver  ResourceType = 2
-	Cloth   ResourceType = 3
-	Spice   ResourceType = 4
-	Leather ResourceType = 5
-	Camel   ResourceType = 6
+	Diamond ResourceType = iota
+	Gold
+	Silver
+	Cloth
+	Spice
+	Leather
+	Camel
 )
 
 func (c ResourceType) Color() lipgloss.Color {
@@ -416,22 +360,50 @@ func (c ResourceType) Color() lipgloss.Color {
 	}
 }
 
+type StyleShortString struct {
+	Style       lipgloss.Style
+	ShortString string
+}
+
+var resourceTypeStyles = map[ResourceType]StyleShortString{
+	Diamond: {
+		Style:       lipgloss.NewStyle().Foreground(Diamond.Color()),
+		ShortString: "Dia",
+	},
+	Gold: {
+		Style:       lipgloss.NewStyle().Foreground(Gold.Color()),
+		ShortString: "Gld",
+	},
+	Silver: {
+		Style:       lipgloss.NewStyle().Foreground(Silver.Color()),
+		ShortString: "Slv",
+	},
+	Cloth: {
+		Style:       lipgloss.NewStyle().Foreground(Cloth.Color()),
+		ShortString: "Cth",
+	},
+	Spice: {
+		Style:       lipgloss.NewStyle().Foreground(Spice.Color()),
+		ShortString: "Spi",
+	},
+	Leather: {
+		Style:       lipgloss.NewStyle().Foreground(Leather.Color()),
+		ShortString: "Lth",
+	},
+	Camel: {
+		Style:       lipgloss.NewStyle().Foreground(Camel.Color()),
+		ShortString: "Cml",
+	},
+}
+
+func (c ResourceType) Style() lipgloss.Style {
+	return resourceTypeStyles[c].Style
+}
+
+func (c ResourceType) ShortString() string {
+	return resourceTypeStyles[c].ShortString
+}
+
 func (c ResourceType) String() string {
-	switch c {
-	case Diamond:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Dia")
-	case Gold:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Gld")
-	case Silver:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Slv")
-	case Cloth:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Cth")
-	case Spice:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Spi")
-	case Leather:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Lth")
-	case Camel:
-		return lipgloss.NewStyle().Foreground(c.Color()).Render("Cml")
-	}
-	return ""
+	return c.Style().Render(c.ShortString())
 }

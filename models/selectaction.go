@@ -7,8 +7,8 @@ import (
 	"github.com/tmoscrip/jaipur/internal/game"
 )
 
-type SelectActionMenu struct {
-	Game            *game.GameState
+type SelectAction struct {
+	Game            *game.Game
 	options         []string
 	transitions     []string
 	Cursor          *int
@@ -27,9 +27,9 @@ func (e *NoGoodsInHandError) Error() string {
 	return "You have no goods in your hand to sell"
 }
 
-func NewSelectAction(game *game.GameState) SelectActionMenu {
+func NewSelectAction(game *game.Game) SelectAction {
 	var selectedOptions = make([]int, 4)
-	return SelectActionMenu{
+	return SelectAction{
 		Game: game,
 		options: []string{
 			"Take 1 resource",
@@ -43,11 +43,11 @@ func NewSelectAction(game *game.GameState) SelectActionMenu {
 	}
 }
 
-func (v SelectActionMenu) Init() tea.Cmd {
+func (v SelectAction) Init() tea.Cmd {
 	return nil
 }
 
-func (v SelectActionMenu) View() string {
+func (v SelectAction) View() string {
 	var s = ""
 
 	for i, option := range v.options {
@@ -60,11 +60,11 @@ func (v SelectActionMenu) View() string {
 	return s
 }
 
-func (v SelectActionMenu) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v SelectAction) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return v, nil
 }
 
-func (v SelectActionMenu) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+func (v SelectAction) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "up" {
@@ -88,7 +88,7 @@ func (v SelectActionMenu) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, err
 	return v, nil, "", nil
 }
 
-func (v SelectActionMenu) validate(cursor int) (bool, error) {
+func (v SelectAction) validate(cursor int) (bool, error) {
 	switch cursor {
 	// take one
 	case 0:

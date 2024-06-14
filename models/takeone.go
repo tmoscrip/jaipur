@@ -9,21 +9,21 @@ import (
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
-type TakeOneCard struct {
-	Game       *game.GameState
+type TakeOne struct {
+	Game       *game.Game
 	Cursor     *int
 	confirming *bool
 }
 
-func NewTakeOne(game *game.GameState) TakeOneCard {
-	return TakeOneCard{Game: game, Cursor: new(int), confirming: new(bool)}
+func NewTakeOne(game *game.Game) TakeOne {
+	return TakeOne{Game: game, Cursor: new(int), confirming: new(bool)}
 }
 
-func (v TakeOneCard) Init() tea.Cmd {
+func (v TakeOne) Init() tea.Cmd {
 	return nil
 }
 
-func (v TakeOneCard) View() string {
+func (v TakeOne) View() string {
 	var s = tui.TitleStyle.Render("Take one card")
 	s += "\n"
 	confirm := ""
@@ -44,11 +44,11 @@ func (v TakeOneCard) View() string {
 	return s
 }
 
-func (v TakeOneCard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (v TakeOne) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return v, nil
 }
 
-func (v TakeOneCard) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+func (v TakeOne) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		logger.Message(fmt.Sprintf("cursor: %d", *v.Cursor))

@@ -9,10 +9,10 @@ import (
 )
 
 type TakeCamels struct {
-	Game *game.GameState
+	Game *game.Game
 }
 
-func NewTakeCamels(game *game.GameState) TakeCamels {
+func NewTakeCamels(game *game.Game) TakeCamels {
 	return TakeCamels{Game: game}
 }
 

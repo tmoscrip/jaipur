@@ -8,10 +8,10 @@ import (
 )
 
 type NameEntry struct {
-	Game *game.GameState
+	Game *game.Game
 }
 
-func NewNameEntry(game *game.GameState) NameEntry {
+func NewNameEntry(game *game.Game) NameEntry {
 	return NameEntry{Game: game}
 }
 

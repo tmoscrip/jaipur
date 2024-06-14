@@ -11,7 +11,7 @@ import (
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
-type menuOption struct {
+type takeMultipleOption struct {
 	column   int
 	Label    string
 	Selected bool
@@ -20,7 +20,7 @@ type menuOption struct {
 
 var TableBorder = lipgloss.NewStyle().Foreground(tui.Silver).Background(lipgloss.Color("#000000"))
 
-func (m menuOption) FormatRight(activeCol int, activeCursor int) string {
+func (m takeMultipleOption) FormatRight(activeCol int, activeCursor int) string {
 	var cursor = fmt.Sprintf(" ")
 	if m.column == activeCol && m.Index == activeCursor {
 		cursor = fmt.Sprintf(">")
@@ -32,7 +32,7 @@ func (m menuOption) FormatRight(activeCol int, activeCursor int) string {
 	return fmt.Sprintf("%s [%s] %s", cursor, checked, m.Label)
 }
 
-func (m menuOption) FormatLeft(activeCol int, activeCursor int) string {
+func (m takeMultipleOption) FormatLeft(activeCol int, activeCursor int) string {
 	var cursor = fmt.Sprintf(" ")
 	if m.column == activeCol && m.Index == activeCursor {
 		cursor = fmt.Sprintf("<")
@@ -44,37 +44,37 @@ func (m menuOption) FormatLeft(activeCol int, activeCursor int) string {
 	return fmt.Sprintf("%s [%s] %s", m.Label, checked, cursor)
 }
 
-func (m menuOption) CursorActive(cursorIdx int) bool {
+func (m takeMultipleOption) CursorActive(cursorIdx int) bool {
 	return cursorIdx == m.Index
 }
 
-func (m menuOption) columnActive(columnIdx int) bool {
+func (m takeMultipleOption) columnActive(columnIdx int) bool {
 	return columnIdx == m.column
 }
 
 type TakeMultiple struct {
-	Game         *game.GameState
-	columns      map[int]map[int]menuOption
+	Game         *game.Game
+	columns      map[int]map[int]takeMultipleOption
 	Cursor       *int
 	activecolumn *int
 }
 
-func (v TakeMultiple) Activecolumn() map[int]menuOption {
+func (v TakeMultiple) Activecolumn() map[int]takeMultipleOption {
 	return v.columns[*v.activecolumn]
 }
 
-func NewTakeMultiple(game *game.GameState) TakeMultiple {
-	market := make(map[int]menuOption)
-	hand := make(map[int]menuOption)
+func NewTakeMultiple(game *game.Game) TakeMultiple {
+	market := make(map[int]takeMultipleOption)
+	hand := make(map[int]takeMultipleOption)
 
-	columns := make(map[int]map[int]menuOption)
+	columns := make(map[int]map[int]takeMultipleOption)
 	columns[0] = hand
 	columns[1] = market
 	for i, card := range game.ActivePlayer().Hand {
-		hand[i] = menuOption{column: 0, Label: card.String(), Selected: false, Index: i}
+		hand[i] = takeMultipleOption{column: 0, Label: card.String(), Selected: false, Index: i}
 	}
 	for i, card := range game.Market {
-		market[i] = menuOption{column: 1, Label: card.String(), Selected: false, Index: i}
+		market[i] = takeMultipleOption{column: 1, Label: card.String(), Selected: false, Index: i}
 	}
 	return TakeMultiple{Game: game, Cursor: new(int), activecolumn: new(int), columns: columns}
 }

@@ -8,13 +8,13 @@ import (
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
-type MenuOption struct {
+type sellCardsOption struct {
 	Label    string
 	Selected bool
 	Index    int
 }
 
-func (m MenuOption) Format(activeCursor int) string {
+func (m sellCardsOption) Format(activeCursor int) string {
 	var cursor = " "
 	if m.Index == activeCursor {
 		cursor = ">"
@@ -27,15 +27,15 @@ func (m MenuOption) Format(activeCursor int) string {
 }
 
 type SellCards struct {
-	Game    *game.GameState
-	options []MenuOption
+	Game    *game.Game
+	options []sellCardsOption
 	Cursor  *int
 }
 
-func NewSellCards(game *game.GameState) SellCards {
-	options := make([]MenuOption, len(game.ActivePlayer().Hand))
+func NewSellCards(game *game.Game) SellCards {
+	options := make([]sellCardsOption, len(game.ActivePlayer().Hand))
 	for i, card := range game.ActivePlayer().Hand {
-		options[i] = MenuOption{Index: i, Label: card.String(), Selected: false}
+		options[i] = sellCardsOption{Index: i, Label: card.String(), Selected: false}
 	}
 	return SellCards{Game: game, options: options, Cursor: new(int)}
 }

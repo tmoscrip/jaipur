@@ -15,8 +15,6 @@ const OuterSpace = lipgloss.Color("#464646")
 const DavysGray = lipgloss.Color("#575757")
 const DimGray = lipgloss.Color("#696969")
 const Gray = lipgloss.Color("#7a7a7a")
-
-// some corresponding lighter shades that compliment
 const Silver = lipgloss.Color("#9d9d9d")
 const WhiteSmoke = lipgloss.Color("#c0c0c0")
 const WhiteSmoke2 = lipgloss.Color("#d3d3d3")

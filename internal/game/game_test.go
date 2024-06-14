@@ -33,7 +33,7 @@ func TestMoveCamelsToHerd(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		p := &PlayerState{Hand: test.initialHand, Herd: test.initialHerd}
+		p := &Player{Hand: test.initialHand, Herd: test.initialHerd}
 		p.MoveCamelsToHerd()
 
 		if !reflect.DeepEqual(p.Hand, test.expectedHand) {
