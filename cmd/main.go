@@ -11,13 +11,13 @@ import (
 	"github.com/tmoscrip/jaipur/models"
 )
 
-type MyMainModel interface {
+type mainModel interface {
 	tea.Model
 	MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error)
 }
 
 type MainModel struct {
-	ActiveView   MyMainModel
+	ActiveView   mainModel
 	Game         *game.Game
 	ErrorMessage string
 	ShowTopMenu  bool
