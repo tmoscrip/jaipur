@@ -9,7 +9,7 @@ type Game struct {
 	Discarded       []ResourceType
 	BonusTokens     map[int][]int // cards required -> points awarded
 	ResourceTokens  map[ResourceType][]int
-	Market          []ResourceType
+	Market          Market
 	Players         []Player
 	ActivePlayerIdx *int
 }
@@ -36,7 +36,7 @@ func NewGame() Game {
 	g.Deck = NewDeck()
 	g.Discarded = make([]ResourceType, 0)
 
-	g.Market = make([]ResourceType, 0)
+	g.Market = Market{}
 	for i := 0; i < 3; i++ {
 		g.Market = append(g.Market, Camel)
 	}
@@ -79,16 +79,6 @@ func (g *Game) ActivePlayer() *Player {
 	return &g.Players[*g.ActivePlayerIdx]
 }
 
-func (g *Game) MarketCamelCount() int {
-	var count = 0
-	for _, card := range g.Market {
-		if card == Camel {
-			count++
-		}
-	}
-	return count
-}
-
 type TooManyInHandError struct{}
 
 func (e *TooManyInHandError) Error() string {
@@ -112,10 +102,10 @@ func (e *NoCamelsInMarketError) Error() string {
 }
 
 func (g *Game) PlayerTakeCamels() (bool, error) {
-	if g.MarketCamelCount() == 0 {
+	if g.Market.Count(Camel) == 0 {
 		return false, &NoCamelsInMarketError{}
 	}
-	if g.MarketCamelCount()+len(g.ActivePlayer().Hand) > 7 {
+	if g.Market.Count(Camel)+len(g.ActivePlayer().Hand) > 7 {
 		return false, &TooManyInHandError{}
 	}
 	originalMarket := g.Market

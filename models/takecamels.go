@@ -22,7 +22,7 @@ func (v TakeCamels) Init() tea.Cmd {
 
 func (v TakeCamels) View() string {
 	var s = ""
-	s += tui.TitleStyle.Render(fmt.Sprintf("Take %d camels?", v.Game.MarketCamelCount()))
+	s += tui.TitleStyle.Render(fmt.Sprintf("Take %d camels?", v.Game.Market.Count(game.Camel)))
 	return s
 }
 

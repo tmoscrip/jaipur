@@ -100,10 +100,10 @@ func (v SelectAction) validate(cursor int) (bool, error) {
 		return true, nil
 		// take camels
 	case 2:
-		if len(v.Game.ActivePlayer().Hand)+v.Game.MarketCamelCount() > 7 {
+		if len(v.Game.ActivePlayer().Hand)+v.Game.Market.Count(game.Camel) > 7 {
 			return false, &TooManyInHandError{}
 		}
-		if v.Game.MarketCamelCount() == 0 {
+		if v.Game.Market.Count(game.Camel) == 0 {
 			return false, &game.NoCamelsInMarketError{}
 		}
 		// sell goods

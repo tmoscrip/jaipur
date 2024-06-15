@@ -130,6 +130,20 @@ func (m MainModel) formatDiscardedColumn() string {
 	return s
 }
 
+func formatCardRow(market []game.ResourceType, title string) string {
+	// cards := make([]string, len(market))
+	// for i, card := range market {
+	// 	cards[i] = tui.RenderCard(card)
+	// }
+	// items := make([]string, 0)
+	// items = append(items, tui.TitleStyle.MarginLeft(1).Render(title))
+	// items = append(items, cards...)
+	// return lipgloss.JoinHorizontal(lipgloss.Center, items...) + "\n"
+	s := tui.TitleStyle.MarginLeft(1).Render(title) + "\n"
+	s += tui.RenderCards(market) + "\n"
+	return s
+}
+
 func (m MainModel) View() string {
 	s := ""
 	if m.ShowTopMenu {
@@ -142,12 +156,11 @@ func (m MainModel) View() string {
 		if len(m.Game.Discarded) > 0 {
 			menuLeft += fmt.Sprintf("Discarded\n%s\n", m.formatDiscarded())
 		}
-		menuLeft += fmt.Sprintf("Market:\n%s\n", tui.RenderCards(m.Game.Market))
-		menuLeft += fmt.Sprintf("Your hand:\n%s", tui.RenderCards(m.Game.ActivePlayer().Hand))
+		menuLeft += formatCardRow(m.Game.Market, "Market")
+		menuLeft += formatCardRow(m.Game.ActivePlayer().Hand, "Hand")
 
 		columns := m.formatRemainingTokensColumn()
 		rightStyle := lipgloss.NewStyle().Width(tui.Width - lipgloss.Width(menuLeft) - lipgloss.Width(columns)).Align(lipgloss.Right)
-
 		menuRight += rightStyle.Render(fmt.Sprintf("Tokens\n%s\n", columns))
 
 		s = tui.TopMenuStyle.Render(lipgloss.JoinHorizontal(0, menuLeft, menuRight))
