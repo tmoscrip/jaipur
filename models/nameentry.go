@@ -4,7 +4,9 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/tmoscrip/jaipur/internal/game"
+	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
 type NameEntry struct {
@@ -20,8 +22,9 @@ func (v NameEntry) Init() tea.Cmd {
 }
 
 func (v NameEntry) View() string {
-	var pString = fmt.Sprintf("Player %d", v.Game.Players.ActiveIdx+1)
-	return fmt.Sprintf("%s player's name:\n> %s", pString, v.Game.Players.Active().Name)
+	var s = fmt.Sprintf("Player %d name\n", v.Game.Players.ActiveIdx+1)
+	s += tui.TitleStyle.Width(30).AlignHorizontal(lipgloss.Center).Render(v.Game.Players.Active().Name)
+	return s
 }
 
 func (v NameEntry) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
