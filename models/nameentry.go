@@ -32,17 +32,18 @@ func (v NameEntry) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v NameEntry) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
 	var p = v.Game.Players.Active()
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			v.Game.Players.Next()
 			if v.Game.Players.Get(1).Name != "" {
-				return v, nil, "selectActionMenu", nil
+				return model, nil, "selectActionMenu", nil
 			}
-			return v, nil, "", nil
+			return model, nil, "", nil
 		}
 		p.Name += msg.String()
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }

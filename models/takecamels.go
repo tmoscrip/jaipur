@@ -12,8 +12,15 @@ type TakeCamels struct {
 	Game *game.Game
 }
 
-func NewTakeCamels(game *game.Game) TakeCamels {
-	return TakeCamels{Game: game}
+func NewTakeCamels(g *game.Game) TakeCamels {
+	g2 := g
+	// iterate over market, set all camels selected in market
+	for i := 0; i < len(g2.Market); i++ {
+		if g2.Market[i] == game.Camel {
+			g2.MarketSelected = append(g2.MarketSelected, i)
+		}
+	}
+	return TakeCamels{Game: g2}
 }
 
 func (v TakeCamels) Init() tea.Cmd {
@@ -31,21 +38,22 @@ func (v TakeCamels) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v TakeCamels) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			return v, nil, "selectActionMenu", nil
+			return model, nil, "selectActionMenu", nil
 		}
 		if msg.String() == "enter" {
 			endRound, error := v.Game.PlayerTakeCamels()
 			if error != nil {
-				return v, nil, "", error
+				return model, nil, "", error
 			}
 			if endRound {
-				return v, nil, "endRound", nil
+				return model, nil, "endRound", nil
 			}
-			return v, nil, "selectActionMenu", nil
+			return model, nil, "selectActionMenu", nil
 		}
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }

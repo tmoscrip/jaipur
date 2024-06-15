@@ -67,24 +67,8 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 var numberStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FFFFFF"))
 
-func (m MainModel) formatDiscarded() string {
-	discarded := ""
-	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather, game.Camel} {
-		count := 0
-		for _, card := range m.Game.Discarded {
-			if card == resource {
-				count++
-			}
-		}
-		if count != 0 {
-			discarded += numberStyle.Render(fmt.Sprintf("%dx%s ", count, resource))
-		}
-	}
-	return discarded
-}
-
 func (m MainModel) formatRemainingTokensColumn() string {
-	s := ""
+	s := "Tokens\n"
 	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather} {
 		count := 0
 		for _, token := range m.Game.ResourceTokens[resource] {
@@ -100,11 +84,11 @@ func (m MainModel) formatRemainingTokensColumn() string {
 			s += fmt.Sprintf("%s %s\n", bars, resource.String())
 		}
 	}
-	return s
+	return s + "\n"
 }
 
 func (m MainModel) formatDiscardedColumn() string {
-	s := ""
+	s := "Discarded\n"
 	for _, resource := range []game.ResourceType{game.Diamond, game.Gold, game.Silver, game.Cloth, game.Spice, game.Leather, game.Camel} {
 		count := 0
 		for _, card := range m.Game.Discarded {
@@ -123,17 +107,10 @@ func (m MainModel) formatDiscardedColumn() string {
 	return s
 }
 
-func formatCardRow(market []game.ResourceType, title string) string {
-	// cards := make([]string, len(market))
-	// for i, card := range market {
-	// 	cards[i] = tui.RenderCard(card)
-	// }
-	// items := make([]string, 0)
-	// items = append(items, tui.TitleStyle.MarginLeft(1).Render(title))
-	// items = append(items, cards...)
-	// return lipgloss.JoinHorizontal(lipgloss.Center, items...) + "\n"
+func formatCardRow(cards []game.ResourceType, selectedIndexes []int, cursor int, title string) string {
 	s := tui.TitleStyle.MarginLeft(1).Render(title) + "\n"
-	s += tui.RenderCards(market) + "\n"
+
+	s += tui.RenderCards(cards, selectedIndexes, cursor) + "\n"
 	return s
 }
 
@@ -146,17 +123,15 @@ func (m MainModel) View() string {
 
 		menuLeft += fmt.Sprintf("Player %d: %s        Rounds: %d\n", m.Game.Players.ActiveIdx+1, m.Game.Players.Active().Name, m.Game.Players.Active().Rounds)
 		menuLeft += fmt.Sprintf("Score: %d            Herd: %d\n", m.Game.Players.Active().Score, m.Game.Players.Active().Herd)
-		if len(m.Game.Discarded) > 0 {
-			menuLeft += fmt.Sprintf("Discarded\n%s\n", m.formatDiscarded())
-		}
-		menuLeft += formatCardRow(m.Game.Market, "Market")
-		menuLeft += formatCardRow(m.Game.Players.Active().Hand, "Hand")
+		menuLeft += formatCardRow(m.Game.Market, m.Game.MarketSelected, m.Game.MarketCursor, "Market")
+		menuLeft += formatCardRow(m.Game.Players.Active().Hand, m.Game.HandSelected, m.Game.HandCursor, "Hand")
 
-		columns := m.formatRemainingTokensColumn()
-		rightStyle := lipgloss.NewStyle().Width(tui.Width - lipgloss.Width(menuLeft) - lipgloss.Width(columns)).Align(lipgloss.Right)
-		menuRight += rightStyle.Render(fmt.Sprintf("Tokens\n%s\n", columns))
-
-		s = tui.TopMenuStyle.Render(lipgloss.JoinHorizontal(0, menuLeft, menuRight))
+		menuRight += m.formatRemainingTokensColumn()
+		menuRight += m.formatDiscardedColumn()
+		rightStyle := lipgloss.NewStyle().Width(tui.Width - lipgloss.Width(menuLeft) - lipgloss.Width(menuRight)).Align(lipgloss.Right)
+		menuRight = rightStyle.Render(menuRight)
+		joined := lipgloss.JoinHorizontal(lipgloss.Top, menuLeft, menuRight)
+		s = tui.TopMenuStyle.Render(joined)
 		s += "\n"
 	}
 

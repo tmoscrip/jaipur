@@ -1,78 +1,26 @@
 package models
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/lipgloss/table"
 
 	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
-type takeMultipleOption struct {
-	column   int
-	Label    string
-	Selected bool
-	Index    int
-}
-
 var TableBorder = lipgloss.NewStyle().Foreground(tui.Silver).Background(lipgloss.Color("#000000"))
 
-func (m takeMultipleOption) FormatRight(activeCol int, activeCursor int) string {
-	var cursor = " "
-	if m.column == activeCol && m.Index == activeCursor {
-		cursor = ">"
-	}
-	var checked = " "
-	if m.Selected {
-		checked = "x"
-	}
-	return fmt.Sprintf("%s [%s] %s", cursor, checked, m.Label)
-}
-
-func (m takeMultipleOption) FormatLeft(activeCol int, activeCursor int) string {
-	var cursor = " "
-	if m.column == activeCol && m.Index == activeCursor {
-		cursor = "<"
-	}
-	var checked = " "
-	if m.Selected {
-		checked = "x"
-	}
-	return fmt.Sprintf("%s [%s] %s", m.Label, checked, cursor)
-}
-
-func (m takeMultipleOption) CursorActive(cursorIdx int) bool {
-	return cursorIdx == m.Index
-}
-
 type TakeMultiple struct {
-	Game         *game.Game
-	columns      map[int]map[int]takeMultipleOption
-	Cursor       *int
-	activecolumn *int
-}
-
-func (v TakeMultiple) Activecolumn() map[int]takeMultipleOption {
-	return v.columns[*v.activecolumn]
+	Game      *game.Game
+	Cursor    *int
+	activeRow *int
 }
 
 func NewTakeMultiple(game *game.Game) TakeMultiple {
-	market := make(map[int]takeMultipleOption)
-	hand := make(map[int]takeMultipleOption)
-
-	columns := make(map[int]map[int]takeMultipleOption)
-	columns[0] = hand
-	columns[1] = market
-	for i, card := range game.Players.Active().Hand {
-		hand[i] = takeMultipleOption{column: 0, Label: card.String(), Selected: false, Index: i}
-	}
-	for i, card := range game.Market {
-		market[i] = takeMultipleOption{column: 1, Label: card.String(), Selected: false, Index: i}
-	}
-	return TakeMultiple{Game: game, Cursor: new(int), activecolumn: new(int), columns: columns}
+	g := game
+	g.HandCursor = 0
+	g.MarketCursor = -1
+	return TakeMultiple{Game: g, Cursor: new(int), activeRow: new(int)}
 }
 
 func (v TakeMultiple) Init() tea.Cmd {
@@ -80,30 +28,8 @@ func (v TakeMultiple) Init() tea.Cmd {
 }
 
 func (v TakeMultiple) View() string {
-
 	s := tui.TitleStyle.Render("Take Multiple")
 	s += "\n"
-
-	var max = 0
-	if len(v.Game.Players.Active().Hand) > len(v.Game.Market) {
-		max = len(v.Game.Players.Active().Hand)
-	} else {
-		max = len(v.Game.Market)
-	}
-
-	t := table.New().
-		StyleFunc(func(row, col int) lipgloss.Style {
-			if col == 0 {
-				return lipgloss.NewStyle().Align(lipgloss.Center)
-			}
-			return lipgloss.NewStyle().Align(lipgloss.Center)
-		}).Width(40).Headers("Hand", "Market").Border(lipgloss.NormalBorder()).BorderStyle(TableBorder)
-	for i := 0; i < max; i++ {
-		// rows = append(rows, []string{v.columns[0][i].FormatLeft(*v.activecolumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activecolumn, *v.Cursor)})
-		t.Row(v.columns[0][i].FormatLeft(*v.activecolumn, *v.Cursor), v.columns[1][i].FormatRight(*v.activecolumn, *v.Cursor))
-	}
-
-	s += t.Render()
 
 	return s
 }
@@ -113,72 +39,74 @@ func (v TakeMultiple) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			if *v.activecolumn == 1 {
-				*v.activecolumn = 0
-				return v, nil, "", nil
+			if *model.activeRow == 1 {
+				*model.activeRow = 0
+				model.Game.MarketCursor = -1
+				return model, nil, "", nil
 			}
-			return v, nil, "selectActionMenu", nil
-		}
-		if msg.String() == "up" {
-			if *v.Cursor > 0 {
-				*v.Cursor = *v.Cursor - 1
-			}
-		}
-		if msg.String() == "down" {
-			if *v.Cursor < len(v.Game.Market)-1 {
-				*v.Cursor = *v.Cursor + 1
-			}
+			model.Game.MarketCursor = -1
+			model.Game.HandCursor = -1
+			return model, nil, "selectActionMenu", nil
 		}
 		if msg.String() == "left" {
-			if *v.activecolumn > 0 {
-				*v.activecolumn = *v.activecolumn - 1
+			if *model.Cursor > 0 {
+				*model.Cursor = *model.Cursor - 1
+				if *model.activeRow == 1 {
+					model.Game.MarketCursor = *model.Cursor
+					model.Game.HandCursor = -1
+				} else {
+					model.Game.HandCursor = *model.Cursor
+					model.Game.MarketCursor = -1
+				}
 			}
 		}
 		if msg.String() == "right" {
-			if *v.activecolumn < 1 {
-				*v.activecolumn = *v.activecolumn + 1
+			if *model.Cursor < len(model.Game.Market)-1 {
+				*model.Cursor = *model.Cursor + 1
+				if *model.activeRow == 1 {
+					model.Game.MarketCursor = *model.Cursor
+					model.Game.HandCursor = -1
+				} else {
+					model.Game.HandCursor = *model.Cursor
+					model.Game.MarketCursor = -1
+				}
+			}
+		}
+		if msg.String() == "up" {
+			if *model.activeRow == 0 {
+				*model.activeRow = 1
+				model.Game.MarketCursor = *model.Cursor
+				model.Game.HandCursor = -1
+			}
+		}
+		if msg.String() == "down" {
+			if *model.activeRow == 1 {
+				*model.activeRow = 0
+				model.Game.HandCursor = *model.Cursor
+				model.Game.MarketCursor = -1
 			}
 		}
 		if msg.String() == "enter" {
-			col := v.columns[*v.activecolumn]
-			item := col[*v.Cursor]
-			item.Selected = !item.Selected
-			col[*v.Cursor] = item
+			if *model.activeRow == 1 {
+				model.Game.ToggleMarket(*model.Cursor)
+			} else {
+				model.Game.ToggleHand(*model.Cursor)
+			}
 		}
 		if msg.String() == "n" {
-
-			endRound, err := v.Game.PlayerTakeMultiple(v.selectedHand(), v.selectedMarket())
+			endRound, err := model.Game.PlayerTakeMultiple(model.Game.MarketSelected, model.Game.HandSelected)
 			if err != nil {
-				return v, nil, "", err
+				return model, nil, "", err
 			}
 			if endRound {
-				return v, nil, "endRound", nil
+				return model, nil, "endRound", nil
 			}
-			return v, nil, "selectActionMenu", nil
+			return model, nil, "selectActionMenu", nil
 		}
 	}
-	return v, nil, "", nil
-}
-
-func (v TakeMultiple) selectedHand() []int {
-	var selected []int
-	for i, card := range v.columns[0] {
-		if card.Selected {
-			selected = append(selected, i)
-		}
-	}
-	return selected
-}
-
-func (v TakeMultiple) selectedMarket() []int {
-	var selected []int
-	for i, card := range v.columns[1] {
-		if card.Selected {
-			selected = append(selected, i)
-		}
-	}
-	return selected
+	return model, nil, "", nil
 }

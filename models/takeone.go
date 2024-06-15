@@ -9,13 +9,14 @@ import (
 )
 
 type TakeOne struct {
-	Game       *game.Game
-	Cursor     *int
-	confirming *bool
+	Game   *game.Game
+	Cursor *int
 }
 
 func NewTakeOne(game *game.Game) TakeOne {
-	return TakeOne{Game: game, Cursor: new(int), confirming: new(bool)}
+	g := game
+	g.MarketCursor = 0
+	return TakeOne{Game: g, Cursor: new(int)}
 }
 
 func (v TakeOne) Init() tea.Cmd {
@@ -26,18 +27,9 @@ func (v TakeOne) View() string {
 	var s = tui.TitleStyle.Render("Take one card")
 	s += "\n"
 	confirm := ""
-	if *v.confirming {
+	if len(v.Game.MarketSelected) == 1 {
 		confirm = fmt.Sprintf(" (confirm %s)", v.Game.Market[*v.Cursor])
 		confirm += "\nb for back"
-	}
-	s += fmt.Sprintf("Select a good to take%s\n", confirm)
-
-	for i, resource := range v.Game.Market {
-		var x = " "
-		if *v.Cursor == i {
-			x = "x"
-		}
-		s += fmt.Sprintf("[%s] %s\n", x, resource)
 	}
 
 	return s
@@ -47,40 +39,51 @@ func (v TakeOne) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return v, nil
 }
 
+func (v TakeOne) confirming() bool {
+	return len(v.Game.MarketSelected) == 1
+}
+
 func (v TakeOne) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
+	if model.Game.MarketCursor == -1 {
+		model.Game.MarketCursor = 0
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			if *v.confirming {
-				*v.confirming = false
-				return v, nil, "", nil
+			if model.confirming() {
+				model.Game.ToggleMarket(model.Game.MarketSelected[0])
+				return model, nil, "", nil
 			}
-			return v, nil, "selectActionMenu", nil
+			model.Game.MarketCursor = -1
+			return model, nil, "selectActionMenu", nil
 		}
-		if msg.String() == "up" && !*v.confirming {
-			if *v.Cursor > 0 {
-				*v.Cursor = *v.Cursor - 1
+		if msg.String() == "left" && !model.confirming() {
+			if *model.Cursor > 0 {
+				*model.Cursor = *model.Cursor - 1
+				model.Game.MarketCursor = *model.Cursor
 			}
 		}
-		if msg.String() == "down" && !*v.confirming {
-			if *v.Cursor < len(v.Game.Market)-1 {
-				*v.Cursor = *v.Cursor + 1
+		if msg.String() == "right" && !model.confirming() {
+			if *model.Cursor < len(model.Game.Market)-1 {
+				*model.Cursor = *model.Cursor + 1
+				model.Game.MarketCursor = *model.Cursor
 			}
 		}
 		if msg.String() == "enter" {
-			if !*v.confirming {
-				*v.confirming = true
-				return v, nil, "", nil
+			if len(model.Game.MarketSelected) == 0 {
+				model.Game.ToggleMarket(*model.Cursor)
+				return model, nil, "", nil
 			}
-			if *v.confirming {
-				*v.confirming = false
-				endRound, _ := v.Game.PlayerTakeOne(*v.Cursor)
+			if len(model.Game.MarketSelected) == 1 {
+				endRound, _ := model.Game.PlayerTakeOne(*model.Cursor)
 				if endRound {
-					return v, nil, "endRound", nil
+					return model, nil, "endRound", nil
 				}
-				return v, nil, "selectActionMenu", nil
+				return model, nil, "selectActionMenu", nil
 			}
 		}
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }

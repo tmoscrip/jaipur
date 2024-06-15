@@ -1,10 +1,9 @@
 package models
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tmoscrip/jaipur/internal/game"
+	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
 type SelectAction struct {
@@ -47,17 +46,20 @@ func (v SelectAction) Init() tea.Cmd {
 	return nil
 }
 
-func (v SelectAction) View() string {
+func (v SelectAction) Render() string {
 	var s = ""
-
 	for i, option := range v.options {
-		var x = " "
+		style := tui.TitleStyle.Bold(false).BorderForeground(tui.Silver)
 		if i == *v.Cursor {
-			x = "x"
+			style = style.Foreground(tui.White).Background(tui.EerieBlack).Bold(true)
 		}
-		s += fmt.Sprintf("[%s] %s\n", x, option)
+		s += style.Render(option) + "\n"
 	}
 	return s
+}
+
+func (v SelectAction) View() string {
+	return v.Render()
 }
 
 func (v SelectAction) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -65,6 +67,7 @@ func (v SelectAction) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v SelectAction) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "up" {
@@ -80,12 +83,12 @@ func (v SelectAction) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 		if msg.String() == "enter" {
 			_, err := v.validate(*v.Cursor)
 			if err != nil {
-				return v, nil, "", err
+				return model, nil, "", err
 			}
 			return v, nil, v.transitions[*v.Cursor], nil
 		}
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }
 
 func (v SelectAction) validate(cursor int) (bool, error) {

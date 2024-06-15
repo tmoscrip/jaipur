@@ -41,12 +41,13 @@ func (v EndRound) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v EndRound) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
 			v.Game.StartRound()
-			return v, nil, "selectActionMenu", nil
+			return model, nil, "selectActionMenu", nil
 		}
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }

@@ -11,10 +11,16 @@ type Game struct {
 	ResourceTokens ResourceTokens
 	Market         Market
 	Players        Players
+	MarketSelected []int
+	MarketCursor   int
+	HandSelected   []int
+	HandCursor     int
 }
 
 func NewGame() Game {
 	var g = Game{}
+	g.HandCursor = -1
+	g.MarketCursor = -1
 	g.Players = Players{}
 	g.Deck = NewDeck()
 	g.Discarded = make([]ResourceType, 0)
@@ -43,6 +49,30 @@ func NewGame() Game {
 	}
 
 	return g
+}
+
+func (g *Game) ToggleMarket(index int) {
+	// if the index is already in the selected list, remove it
+	for i := 0; i < len(g.MarketSelected); i++ {
+		if g.MarketSelected[i] == index {
+			g.MarketSelected = append(g.MarketSelected[:i], g.MarketSelected[i+1:]...)
+			return
+		}
+	}
+	// if the index is not in the selected list, add it
+	g.MarketSelected = append(g.MarketSelected, index)
+}
+
+func (g *Game) ToggleHand(index int) {
+	// if the index is already in the selected list, remove it
+	for i := 0; i < len(g.HandSelected); i++ {
+		if g.HandSelected[i] == index {
+			g.HandSelected = append(g.HandSelected[:i], g.HandSelected[i+1:]...)
+			return
+		}
+	}
+	// if the index is not in the selected list, add it
+	g.HandSelected = append(g.HandSelected, index)
 }
 
 type TooManyInHandError struct{}
@@ -203,6 +233,11 @@ func (g *Game) ShouldRoundEnd() bool {
 }
 
 func (g *Game) nextPlayer() bool {
+	g.MarketCursor = -1
+	g.HandCursor = -1
+	g.MarketSelected = make([]int, 0)
+	g.HandSelected = make([]int, 0)
+
 	g.Players.Active().MoveCamelsToHerd()
 	g.Players.Next()
 

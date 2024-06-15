@@ -1,43 +1,20 @@
 package models
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
-type sellCardsOption struct {
-	Label    string
-	Selected bool
-	Index    int
-}
-
-func (m sellCardsOption) Format(activeCursor int) string {
-	var cursor = " "
-	if m.Index == activeCursor {
-		cursor = ">"
-	}
-	var checked = " "
-	if m.Selected {
-		checked = "x"
-	}
-	return fmt.Sprintf("%s [%s] %s", cursor, checked, m.Label)
-}
-
 type SellCards struct {
-	Game    *game.Game
-	options []sellCardsOption
-	Cursor  *int
+	Game   *game.Game
+	Cursor *int
 }
 
-func NewSellCards(g *game.Game) SellCards {
-	options := make([]sellCardsOption, len(g.Players.Active().Hand))
-	for i, card := range g.Players.Active().Hand {
-		options[i] = sellCardsOption{Index: i, Label: card.String(), Selected: false}
-	}
-	return SellCards{Game: g, options: options, Cursor: new(int)}
+func NewSellCards(game *game.Game) SellCards {
+	g := game
+	g.HandCursor = 0
+	return SellCards{Game: g, Cursor: new(int)}
 }
 
 func (v SellCards) Init() tea.Cmd {
@@ -47,10 +24,6 @@ func (v SellCards) Init() tea.Cmd {
 func (v SellCards) View() string {
 	s := tui.TitleStyle.Render("Sell cards")
 	s += "\n"
-
-	for _, card := range v.options {
-		s += fmt.Sprintf("%s\n", card.Format(*v.Cursor))
-	}
 	return s
 }
 
@@ -59,42 +32,42 @@ func (v SellCards) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v SellCards) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
+	model := v
+	if model.Game.HandCursor == -1 {
+		model.Game.HandCursor = 0
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			return v, nil, "selectActionMenu", nil
+			model.Game.HandCursor = -1
+			return model, nil, "selectActionMenu", nil
 		}
-		if msg.String() == "up" {
-			if *v.Cursor > 0 {
-				*v.Cursor = *v.Cursor - 1
+		if msg.String() == "left" {
+			if *model.Cursor > 0 {
+				*model.Cursor = *model.Cursor - 1
+				model.Game.HandCursor = *model.Cursor
 			}
 		}
-		if msg.String() == "down" {
-			if *v.Cursor < len(v.Game.Players.Active().Hand)-1 {
-				*v.Cursor = *v.Cursor + 1
+		if msg.String() == "right" {
+			if *model.Cursor < len(model.Game.Players.Active().Hand)-1 {
+				*model.Cursor = *model.Cursor + 1
+				model.Game.HandCursor = *model.Cursor
 			}
 		}
 		if msg.String() == "enter" {
-			option := v.options[*v.Cursor]
-			option.Selected = !option.Selected
-			v.options[*v.Cursor] = option
+			model.Game.ToggleHand(*model.Cursor)
 		}
 		if msg.String() == "n" {
-			selected := make([]int, 0)
-			for i, option := range v.options {
-				if option.Selected {
-					selected = append(selected, i)
-				}
-			}
-			endRound, err := v.Game.PlayerSellCards(selected)
+			endRound, err := model.Game.PlayerSellCards(model.Game.HandSelected)
 			if err != nil {
-				return v, nil, "", err
+				return model, nil, "", err
 			}
 			if endRound {
-				return v, nil, "endRound", nil
+				return model, nil, "endRound", nil
 			}
-			return v, nil, "selectActionMenu", nil
+			return model, nil, "selectActionMenu", nil
 		}
 	}
-	return v, nil, "", nil
+	return model, nil, "", nil
 }

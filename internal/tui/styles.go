@@ -54,22 +54,40 @@ var TitleStyle = lg.NewStyle().
 	Bold(true).Border(lg.RoundedBorder()).
 	Padding(0, 4)
 
-func RenderCard(card game.ResourceType, active bool, selected bool) string {
+type cardView struct {
+	Resource game.ResourceType
+	Selected bool
+	Active   bool
+}
+
+func RenderCard(card cardView) string {
 	style := lg.NewStyle().
 		Border(lg.RoundedBorder()).
 		Padding(1).
-		Background(card.Color())
+		Background(card.Resource.Color())
 
-	if active {
-		style = style.BorderBackground(lg.Color("#FF0000"))
+	if card.Selected {
+		style = style.BorderForeground(lg.Color("#FF0000"))
 	}
-	return style.Render(card.String())
+	if card.Active {
+		style = style.BorderBackground(DimGray).Bold(true)
+	}
+	return style.Render(card.Resource.String())
 }
 
-func RenderCards(cards []game.ResourceType) string {
+func RenderCards(cards []game.ResourceType, selectedIndexes []int, cursor int) string {
 	var cs = make([]string, 0)
-	for _, card := range cards {
-		cs = append(cs, RenderCard(card, false, false))
+	for rowIndex, card := range cards {
+		selected, isCursor := false, false
+		if rowIndex == cursor {
+			isCursor = true
+		}
+		for _, selectedIdx := range selectedIndexes {
+			if rowIndex == selectedIdx {
+				selected = true
+			}
+		}
+		cs = append(cs, RenderCard(cardView{card, selected, isCursor}))
 	}
 
 	return lg.JoinHorizontal(lg.Left, cs...)
