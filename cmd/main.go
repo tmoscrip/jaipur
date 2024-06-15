@@ -7,7 +7,6 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/tmoscrip/jaipur/internal/game"
-	"github.com/tmoscrip/jaipur/internal/logger"
 	"github.com/tmoscrip/jaipur/internal/tui"
 	"github.com/tmoscrip/jaipur/models"
 )
@@ -34,15 +33,11 @@ func (m MainModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.Type == tea.KeyCtrlC {
-			logger.Message("quitting")
 			return m, tea.Quit
 		}
 	}
 
 	_, cmd, transition, err := m.ActiveView.MyUpdate(msg)
-	if transition != "" {
-		logger.Message(fmt.Sprintf("transition: %s", transition))
-	}
 
 	if err != nil {
 		m.ErrorMessage = err.Error()

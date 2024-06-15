@@ -12,7 +12,7 @@
               "--headless",
               "--listen=:2345",
               "--api-version=2",
-              "${workspaceFolder}/main.go"
+              "${workspaceFolder}/cmd"
           ],
           "isBackground": true,
           "problemMatcher": {
