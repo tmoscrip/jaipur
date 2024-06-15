@@ -5,16 +5,17 @@ import (
 )
 
 type Game struct {
-	Deck           Deck
-	Discarded      []ResourceType
-	BonusTokens    BonusTokens
-	ResourceTokens ResourceTokens
-	Market         Market
-	Players        Players
-	MarketSelected []int
-	MarketCursor   int
-	HandSelected   []int
-	HandCursor     int
+	Deck             Deck
+	Discarded        []ResourceType
+	BonusTokens      BonusTokens
+	ResourceTokens   ResourceTokens
+	Market           Market
+	Players          Players
+	MarketSelected   []int
+	MarketCursor     int
+	HandSelected     []int
+	HandCursor       int
+	LastActionString string
 }
 
 func NewGame() Game {
@@ -37,14 +38,7 @@ func NewGame() Game {
 		var player = Player{}
 		drawn, _ := g.Deck.Draw(5)
 		player.Hand = drawn
-
-		// TODO: what if the redraw has camels?
-		var camels = player.MoveCamelsToHerd()
-		// refill hand accounting for removed camels
-		for j := 0; j < camels; j++ {
-			drawn, _ := g.Deck.Draw(1)
-			player.Hand = append(player.Hand, drawn...)
-		}
+		player.MoveCamelsToHerd()
 		g.Players.Add(player)
 	}
 

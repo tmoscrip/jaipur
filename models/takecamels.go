@@ -30,6 +30,8 @@ func (v TakeCamels) Init() tea.Cmd {
 func (v TakeCamels) View() string {
 	var s = ""
 	s += tui.TitleStyle.Render(fmt.Sprintf("Take %d camels?", v.Game.Market.Count(game.Camel)))
+	s += "\n"
+	s += tui.HelpStyle.Render("b = back, enter = confirm")
 	return s
 }
 
@@ -42,9 +44,11 @@ func (v TakeCamels) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
+			model.Game.MarketSelected = []int{}
 			return model, nil, "selectActionMenu", nil
 		}
 		if msg.String() == "enter" {
+			model.Game.LastActionString = "took camels"
 			endRound, error := v.Game.PlayerTakeCamels()
 			if error != nil {
 				return model, nil, "", error
@@ -52,7 +56,7 @@ func (v TakeCamels) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 			if endRound {
 				return model, nil, "endRound", nil
 			}
-			return model, nil, "selectActionMenu", nil
+			return model, nil, "startTurn", nil
 		}
 	}
 	return model, nil, "", nil

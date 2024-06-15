@@ -53,7 +53,10 @@ func (v SelectAction) Render() string {
 		if i == *v.Cursor {
 			style = style.Foreground(tui.White).Background(tui.EerieBlack).Bold(true)
 		}
-		s += style.Render(option) + "\n"
+		s += style.Render(option)
+		if i != len(v.options)-1 {
+			s += "\n"
+		}
 	}
 	return s
 }

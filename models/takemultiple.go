@@ -2,13 +2,10 @@ package models
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 
 	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
-
-var TableBorder = lipgloss.NewStyle().Foreground(tui.Silver).Background(lipgloss.Color("#000000"))
 
 type TakeMultiple struct {
 	Game      *game.Game
@@ -30,6 +27,8 @@ func (v TakeMultiple) Init() tea.Cmd {
 func (v TakeMultiple) View() string {
 	s := tui.TitleStyle.Render("Take Multiple")
 	s += "\n"
+	s += tui.HelpStyle.Render("b = back, c = confirm")
+	s += "\n"
 
 	return s
 }
@@ -43,13 +42,8 @@ func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
-			if *model.activeRow == 1 {
-				*model.activeRow = 0
-				model.Game.MarketCursor = -1
-				return model, nil, "", nil
-			}
-			model.Game.MarketCursor = -1
 			model.Game.HandCursor = -1
+			model.Game.MarketCursor = -1
 			return model, nil, "selectActionMenu", nil
 		}
 		if msg.String() == "left" {
@@ -97,7 +91,8 @@ func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 				model.Game.ToggleHand(*model.Cursor)
 			}
 		}
-		if msg.String() == "n" {
+		if msg.String() == "c" {
+			model.Game.LastActionString = "took multiple"
 			endRound, err := model.Game.PlayerTakeMultiple(model.Game.MarketSelected, model.Game.HandSelected)
 			if err != nil {
 				return model, nil, "", err
@@ -105,7 +100,7 @@ func (v TakeMultiple) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) 
 			if endRound {
 				return model, nil, "endRound", nil
 			}
-			return model, nil, "selectActionMenu", nil
+			return model, nil, "startTurn", nil
 		}
 	}
 	return model, nil, "", nil

@@ -54,6 +54,8 @@ var TitleStyle = lg.NewStyle().
 	Bold(true).Border(lg.RoundedBorder()).
 	Padding(0, 4)
 
+var HelpStyle = TitleStyle.Bold(false)
+
 type cardView struct {
 	Resource game.ResourceType
 	Selected bool
@@ -67,7 +69,7 @@ func RenderCard(card cardView) string {
 		Background(card.Resource.Color())
 
 	if card.Selected {
-		style = style.BorderForeground(lg.Color("#FF0000"))
+		style = style.BorderStyle(lg.ThickBorder()).BorderForeground(lg.Color("#CC2222"))
 	}
 	if card.Active {
 		style = style.BorderBackground(DimGray).Bold(true)

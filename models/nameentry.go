@@ -37,9 +37,12 @@ func (v NameEntry) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
+			if v.Game.Players.Active().Name == "" {
+				return model, nil, "", nil
+			}
 			v.Game.Players.Next()
 			if v.Game.Players.Get(1).Name != "" {
-				return model, nil, "selectActionMenu", nil
+				return model, nil, "startTurn", nil
 			}
 			return model, nil, "", nil
 		}

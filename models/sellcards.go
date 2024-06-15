@@ -24,6 +24,8 @@ func (v SellCards) Init() tea.Cmd {
 func (v SellCards) View() string {
 	s := tui.TitleStyle.Render("Sell cards")
 	s += "\n"
+	s += tui.HelpStyle.Render("b = back, c = confirm")
+	s += "\n"
 	return s
 }
 
@@ -41,6 +43,7 @@ func (v SellCards) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	case tea.KeyMsg:
 		if msg.String() == "b" {
 			model.Game.HandCursor = -1
+			model.Game.HandSelected = []int{}
 			return model, nil, "selectActionMenu", nil
 		}
 		if msg.String() == "left" {
@@ -58,7 +61,8 @@ func (v SellCards) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 		if msg.String() == "enter" {
 			model.Game.ToggleHand(*model.Cursor)
 		}
-		if msg.String() == "n" {
+		if msg.String() == "c" {
+			model.Game.LastActionString = "sold cards"
 			endRound, err := model.Game.PlayerSellCards(model.Game.HandSelected)
 			if err != nil {
 				return model, nil, "", err
@@ -66,7 +70,7 @@ func (v SellCards) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 			if endRound {
 				return model, nil, "endRound", nil
 			}
-			return model, nil, "selectActionMenu", nil
+			return model, nil, "startTurn", nil
 		}
 	}
 	return model, nil, "", nil

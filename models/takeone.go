@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tmoscrip/jaipur/internal/game"
 	"github.com/tmoscrip/jaipur/internal/tui"
@@ -26,11 +24,11 @@ func (v TakeOne) Init() tea.Cmd {
 func (v TakeOne) View() string {
 	var s = tui.TitleStyle.Render("Take one card")
 	s += "\n"
-	confirm := ""
 	if len(v.Game.MarketSelected) == 1 {
-		confirm = fmt.Sprintf(" (confirm %s)", v.Game.Market[*v.Cursor])
-		confirm += "\nb for back"
+		s += tui.TitleStyle.Render("Take " + v.Game.Market[v.Game.MarketSelected[0]].String() + "?")
+		s += "\n"
 	}
+	s += tui.HelpStyle.Render("b = back, enter = confirm")
 
 	return s
 }
@@ -77,11 +75,12 @@ func (v TakeOne) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 				return model, nil, "", nil
 			}
 			if len(model.Game.MarketSelected) == 1 {
+				model.Game.LastActionString = "took " + model.Game.Market[*model.Cursor].String()
 				endRound, _ := model.Game.PlayerTakeOne(*model.Cursor)
 				if endRound {
 					return model, nil, "endRound", nil
 				}
-				return model, nil, "selectActionMenu", nil
+				return model, nil, "startTurn", nil
 			}
 		}
 	}
