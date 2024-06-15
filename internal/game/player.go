@@ -65,49 +65,49 @@ func (p *Player) setHand(hand []ResourceType) {
 }
 
 type Players struct {
-	players   []Player
+	Players   []Player
 	ActiveIdx int
 }
 
 func (p *Players) Active() *Player {
-	return &p.players[p.ActiveIdx]
+	return &p.Players[p.ActiveIdx]
 }
 
 func (p *Players) Get(i int) *Player {
-	return &p.players[i]
+	return &p.Players[i]
 }
 
 func (p *Players) Next() *Player {
 	p.ActiveIdx = (p.ActiveIdx + 1) % 2
-	return &p.players[p.ActiveIdx]
+	return &p.Players[p.ActiveIdx]
 }
 
 func (p *Players) Add(player Player) {
-	p.players = append(p.players, player)
-	if len(p.players) > 2 {
+	p.Players = append(p.Players, player)
+	if len(p.Players) > 2 {
 		panic("Too many players")
 	}
 }
 
 func (p *Players) Herd(i int) int {
-	return p.players[i].Herd
+	return p.Players[i].Herd
 }
 
 // Returns the player with the highest score, or nil if the scores are tied.
 func (p *Players) HigestScoring() *Player {
-	if p.players[0].Score == p.players[1].Score {
+	if p.Players[0].Score == p.Players[1].Score {
 		return nil
 	}
 
-	var winner = &p.players[0]
+	var winner = &p.Players[0]
 	for i := 1; i < 2; i++ {
-		if p.players[i].Score > winner.Score {
-			winner = &p.players[i]
+		if p.Players[i].Score > winner.Score {
+			winner = &p.Players[i]
 		}
 	}
 	return winner
 }
 
 func (p *Players) AddScore(idx int, score int) {
-	p.players[idx].Score += score
+	p.Players[idx].Score += score
 }

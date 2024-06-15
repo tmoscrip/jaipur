@@ -110,7 +110,7 @@ func (v SelectAction) validate(cursor int) (bool, error) {
 			return false, &TooManyInHandError{}
 		}
 		if v.Game.Market.Count(game.Camel) == 0 {
-			return false, &game.NoCamelsInMarketError{}
+			return false, game.GameError{Message: "There are no camels in the market to take"}
 		}
 		// sell goods
 	case 3:

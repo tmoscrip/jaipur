@@ -5,7 +5,7 @@ import (
 )
 
 type Deck struct {
-	cards []ResourceType
+	Cards []ResourceType
 }
 
 var countInDeck = map[ResourceType]int{
@@ -24,31 +24,31 @@ func NewDeck() Deck {
 	d := Deck{}
 	for card, count := range countInDeck {
 		for i := 0; i < count; i++ {
-			d.cards = append(d.cards, card)
+			d.Cards = append(d.Cards, card)
 		}
 	}
 	// 11 camels, 8 in deck and 3 in market
 	for i := 0; i < 8; i++ {
-		d.cards = append(d.cards, Camel)
+		d.Cards = append(d.Cards, Camel)
 	}
 
-	for i := range d.cards {
+	for i := range d.Cards {
 		j := rand.IntN(i + 1)
-		d.cards[i], d.cards[j] = d.cards[j], d.cards[i]
+		d.Cards[i], d.Cards[j] = d.Cards[j], d.Cards[i]
 	}
 
 	return d
 }
 
 func (d *Deck) Draw(n int) ([]ResourceType, error) {
-	if n > len(d.cards) {
+	if n > len(d.Cards) {
 		return nil, ErrNotEnoughCards{}
 	}
-	cards := d.cards[:n]
-	d.cards = d.cards[n:]
+	cards := d.Cards[:n]
+	d.Cards = d.Cards[n:]
 	return cards, nil
 }
 
 func (d *Deck) Length() int {
-	return len(d.cards)
+	return len(d.Cards)
 }

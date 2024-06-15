@@ -14,6 +14,14 @@ type Game struct {
 	LastActionString string
 }
 
+type GameError struct {
+	Message string
+}
+
+func (ge GameError) Error() string {
+	return ge.Message
+}
+
 func NewGame() Game {
 	var g = Game{}
 	g.HandCursor = -1
@@ -65,6 +73,17 @@ func (g *Game) ToggleHand(index int) {
 	g.HandSelected = append(g.HandSelected, index)
 }
 
+func (g *Game) SetPlayerName(name string) (bool, error) {
+	if len(name) == 0 {
+		return false, GameError{"Name cannot be empty"}
+	}
+	g.Players.Active().Name = name
+	if g.nextPlayer() {
+		return true, nil
+	}
+	return false, nil
+}
+
 type TooManyInHandError struct{}
 
 func (e *TooManyInHandError) Error() string {
@@ -81,18 +100,12 @@ func (g *Game) PlayerTakeOne(marketIndex int) (bool, error) {
 	return false, nil
 }
 
-type NoCamelsInMarketError struct{}
-
-func (e *NoCamelsInMarketError) Error() string {
-	return "There are no camels in the market to take"
-}
-
 func (g *Game) PlayerTakeCamels() (bool, error) {
 	if g.Market.Count(Camel) == 0 {
-		return false, &NoCamelsInMarketError{}
+		return false, GameError{"There are no camels in the market to take"}
 	}
 	if g.Market.Count(Camel)+len(g.Players.Active().Hand) > 7 {
-		return false, &TooManyInHandError{}
+		return false, GameError{"You would have more than 7 cards in your hand"}
 	}
 	originalMarket := g.Market
 	herd := g.Players.Active().Herd
@@ -113,19 +126,13 @@ func (g *Game) PlayerTakeCamels() (bool, error) {
 	return false, nil
 }
 
-type TakeMultipleCountMismatch struct{}
-
-func (e *TakeMultipleCountMismatch) Error() string {
-	return "You must take the same number of cards from your hand and the market"
-}
-
 /*
 PlayerTakeMultiple takes cards from the player's hand and the market and swaps them.
 Parameters are indexes of the cards to take from the hand and the market.
 */
 func (g *Game) PlayerTakeMultiple(hand []int, market []int) (bool, error) {
 	if len(hand) != len(market) {
-		return false, &TakeMultipleCountMismatch{}
+		return false, GameError{"You must take the same number of cards from your hand and the market"}
 	}
 
 	newHand := g.Players.Active().Hand
@@ -143,33 +150,9 @@ func (g *Game) PlayerTakeMultiple(hand []int, market []int) (bool, error) {
 	return false, nil
 }
 
-type MustSellTwoCardsError struct{}
-
-func (e *MustSellTwoCardsError) Error() string {
-	return "You must sell at least 2 cards for that resource"
-}
-
-type NotEnoughOfResourceError struct{}
-
-func (e *NotEnoughOfResourceError) Error() string {
-	return "You don't have enough of that resource"
-}
-
-type SellCardsMismatchedResourcesError struct{}
-
-func (e *SellCardsMismatchedResourcesError) Error() string {
-	return "You can only sell one type of resource at a time"
-}
-
-type NoResourceSelectedError struct{}
-
-func (e *NoResourceSelectedError) Error() string {
-	return "You must select at least one resource to sell"
-}
-
 func (g *Game) PlayerSellCards(indexes []int) (bool, error) {
 	if len(indexes) == 0 {
-		return false, &NoResourceSelectedError{}
+		return false, GameError{"You must select at least one card to sell"}
 	}
 	mismatch := false
 	for i := 0; i < len(indexes)-1; i++ {
@@ -180,14 +163,14 @@ func (g *Game) PlayerSellCards(indexes []int) (bool, error) {
 	}
 
 	if mismatch {
-		return false, &SellCardsMismatchedResourcesError{}
+		return false, GameError{"You can only sell one type of resource at a time"}
 	}
 
 	rt := g.Players.Active().Hand[indexes[0]]
 
 	if rt == Diamond || rt == Gold || rt == Silver {
 		if len(indexes) < 2 {
-			return false, &MustSellTwoCardsError{}
+			return false, GameError{"You must sell at least 2 cards for that resource"}
 		}
 	}
 	removedResources := g.Players.Active().RemoveIndexesFromHand(indexes)
