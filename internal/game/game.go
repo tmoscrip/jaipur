@@ -1,15 +1,11 @@
 package game
 
 import (
-	"fmt"
-	"math/rand/v2"
-
 	"github.com/charmbracelet/lipgloss"
-	"github.com/tmoscrip/jaipur/internal/logger"
 )
 
 type Game struct {
-	Deck            []ResourceType
+	Deck            Deck
 	Discarded       []ResourceType
 	BonusTokens     map[int][]int // cards required -> points awarded
 	ResourceTokens  map[ResourceType][]int
@@ -37,44 +33,16 @@ func NewGame() Game {
 	var g = Game{}
 	g.ActivePlayerIdx = new(int)
 	g.Players = make([]Player, 2)
-	g.Deck = make([]ResourceType, 0)
+	g.Deck = NewDeck()
 	g.Discarded = make([]ResourceType, 0)
-	for i := 0; i < 6; i++ {
-		g.Deck = append(g.Deck, Diamond)
-	}
-	for i := 0; i < 6; i++ {
-		g.Deck = append(g.Deck, Gold)
-	}
-	for i := 0; i < 6; i++ {
-		g.Deck = append(g.Deck, Silver)
-	}
-	for i := 0; i < 8; i++ {
-		g.Deck = append(g.Deck, Cloth)
-	}
-	for i := 0; i < 8; i++ {
-		g.Deck = append(g.Deck, Spice)
-	}
-	for i := 0; i < 10; i++ {
-		g.Deck = append(g.Deck, Leather)
-	}
-	// 11 camels, 8 in deck and 3 in market
-	for i := 0; i < 8; i++ {
-		g.Deck = append(g.Deck, Camel)
-	}
-	// shuffle deck
-	logger.Message("Shuffling deck")
-	for i := range g.Deck {
-		j := rand.IntN(i + 1)
-		g.Deck[i], g.Deck[j] = g.Deck[j], g.Deck[i]
-	}
 
 	g.Market = make([]ResourceType, 0)
 	for i := 0; i < 3; i++ {
 		g.Market = append(g.Market, Camel)
 	}
 
-	g.Market = append(g.Market, g.Deck[0], g.Deck[1])
-	g.Deck = g.Deck[2:]
+	drawn, _ := g.Deck.Draw(2)
+	g.Market = append(g.Market, drawn...)
 
 	g.BonusTokens = make(map[int][]int)
 	g.BonusTokens[3] = []int{3, 3, 2, 2, 2, 1, 1}
@@ -91,16 +59,15 @@ func NewGame() Game {
 
 	for i := 0; i < 2; i++ {
 		var player = Player{}
-		player.Hand = g.Deck[0:5]
-		logger.Message(fmt.Sprintf("Player %d hand: %s", i, player.Hand))
-		g.Deck = g.Deck[5:]
+		drawn, _ := g.Deck.Draw(5)
+		player.Hand = drawn
 
 		// TODO: what if the redraw has camels?
 		var camels = player.MoveCamelsToHerd()
 		// refill hand accounting for removed camels
 		for j := 0; j < camels; j++ {
-			player.Hand = append(player.Hand, g.Deck[0])
-			g.Deck = g.Deck[1:]
+			drawn, _ := g.Deck.Draw(1)
+			player.Hand = append(player.Hand, drawn...)
 		}
 		g.Players[i] = player
 	}
@@ -130,8 +97,8 @@ func (e *TooManyInHandError) Error() string {
 
 func (g *Game) PlayerTakeOne(marketIndex int) (bool, error) {
 	g.ActivePlayer().Hand = append(g.ActivePlayer().Hand, g.Market[marketIndex])
-	g.Market[marketIndex] = g.Deck[0]
-	g.Deck = g.Deck[1:]
+	drawn, _ := g.Deck.Draw(1)
+	g.Market[marketIndex] = drawn[0]
 	if g.nextPlayer() {
 		return true, nil
 	}
@@ -264,10 +231,10 @@ func (g *Game) ShouldRoundEnd() bool {
 	}
 
 	cardsRemaining := 0
-	cardsRemaining += len(g.Deck)
+	cardsRemaining += g.Deck.Length()
 	cardsRemaining += len(g.Market)
 
-	return depletedResourceTokens >= 3 || cardsRemaining < 5 || len(g.Deck) == 0
+	return depletedResourceTokens >= 3 || cardsRemaining < 5 || g.Deck.Length() == 0
 }
 
 func (g *Game) nextPlayer() bool {
@@ -279,8 +246,8 @@ func (g *Game) nextPlayer() bool {
 	newMarket := g.Market
 	// if newmarket is less than 5, add cards from deck
 	for len(newMarket) < 5 {
-		newMarket = append(newMarket, g.Deck[0])
-		g.Deck = g.Deck[1:]
+		drawn, _ := g.Deck.Draw(1)
+		newMarket = append(newMarket, drawn[0])
 	}
 	g.Market = newMarket
 

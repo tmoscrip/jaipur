@@ -188,7 +188,7 @@ func TestPlayerTakeOne(t *testing.T) {
 		g.Players[0] = player
 		g.Market = test.initialMarket
 
-		g.Deck = make([]ResourceType, test.initialDeckCount)
+		g.Deck = NewDeck()
 
 		g.PlayerTakeOne(test.takeFromMarket)
 
@@ -201,7 +201,7 @@ func TestPlayerTakeOne(t *testing.T) {
 			t.Errorf("expected market len %d, got %d", len(test.expectedMarket), len(actualMarket))
 		}
 
-		actualDeckCount := len(g.Deck)
+		actualDeckCount := g.Deck.Length()
 		if actualDeckCount != test.expectedDeckCount {
 			t.Errorf("expected deck count %d, got %d", test.expectedDeckCount, actualDeckCount)
 		}
