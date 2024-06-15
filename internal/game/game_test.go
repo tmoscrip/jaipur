@@ -79,21 +79,19 @@ func TestPlayerSellCards(t *testing.T) {
 	for _, test := range tests {
 		g := NewGame()
 
-		player := g.Players[0]
+		player := g.Players.Get(0)
 		player.Hand = test.initialHand
 		player.Score = test.initialScore
 
 		g.Discarded = test.initialDiscarded
 
-		g.Players[0] = player
-
 		g.PlayerSellCards(test.indexesToSell)
 
-		actualHand := g.Players[0].Hand
+		actualHand := g.Players.Get(0).Hand
 		if !reflect.DeepEqual(actualHand, test.expectedHand) {
 			t.Errorf("expected hand %v, got %v", test.expectedHand, actualHand)
 		}
-		actualScore := g.Players[0].Score
+		actualScore := g.Players.Get(0).Score
 		if actualScore != test.expectedScore {
 			t.Errorf("expected score %d, got %d", test.expectedScore, actualScore)
 		}
@@ -135,15 +133,14 @@ func TestPlayerTakeMultiple(t *testing.T) {
 	for _, test := range tests {
 		g := NewGame()
 
-		player := g.Players[0]
+		player := g.Players.Get(0)
 		player.Hand = test.initialHand
 
-		g.Players[0] = player
 		g.Market = test.initialMarket
 
 		g.PlayerTakeMultiple(test.giveFromHand, test.takeFromMarket)
 
-		actualHand := g.Players[0].Hand
+		actualHand := g.Players.Get(0).Hand
 		if !reflect.DeepEqual(actualHand, test.expectedHand) {
 			t.Errorf("expected hand %v, got %v", test.expectedHand, actualHand)
 		}
@@ -182,17 +179,15 @@ func TestPlayerTakeOne(t *testing.T) {
 	for _, test := range tests {
 		g := NewGame()
 
-		player := g.Players[0]
-		player.Hand = test.initialHand
+		g.Players.Get(0).setHand(test.initialHand)
 
-		g.Players[0] = player
 		g.Market = test.initialMarket
 
 		g.Deck = NewDeck()
 
 		g.PlayerTakeOne(test.takeFromMarket)
 
-		actualHand := g.Players[0].Hand
+		actualHand := g.Players.Get(0).Hand
 		if !reflect.DeepEqual(actualHand, test.expectedHand) {
 			t.Errorf("expected hand %v, got %v", test.expectedHand, actualHand)
 		}
@@ -230,16 +225,15 @@ func TestPlayerTakeCamels(t *testing.T) {
 	for _, test := range tests {
 		g := NewGame()
 
-		player := g.Players[0]
+		player := g.Players.Get(0)
 		player.Hand = test.initialHand
 		player.Herd = test.initialHerd
 
-		g.Players[0] = player
 		g.Market = test.initialMarket
 
 		g.PlayerTakeCamels()
 
-		actualHand := g.Players[0].Hand
+		actualHand := g.Players.Get(0).Hand
 		if !reflect.DeepEqual(actualHand, test.expectedHand) {
 			t.Errorf("expected hand %v, got %v", test.expectedHand, actualHand)
 		}
@@ -249,7 +243,7 @@ func TestPlayerTakeCamels(t *testing.T) {
 			t.Errorf("expected market len %d, got %d", len(test.expectedMarket), len(actualMarket))
 		}
 
-		actualHerd := g.Players[0].Herd
+		actualHerd := g.Players.Get(0).Herd
 		if actualHerd != test.expectedHerd {
 			t.Errorf("expected herd %d, got %d", test.expectedHerd, actualHerd)
 		}

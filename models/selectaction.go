@@ -92,7 +92,7 @@ func (v SelectAction) validate(cursor int) (bool, error) {
 	switch cursor {
 	// take one
 	case 0:
-		if len(v.Game.ActivePlayer().Hand) == 7 {
+		if len(v.Game.Players.Active().Hand) == 7 {
 			return false, &TooManyInHandError{}
 		}
 		// take multiple
@@ -100,7 +100,7 @@ func (v SelectAction) validate(cursor int) (bool, error) {
 		return true, nil
 		// take camels
 	case 2:
-		if len(v.Game.ActivePlayer().Hand)+v.Game.Market.Count(game.Camel) > 7 {
+		if len(v.Game.Players.Active().Hand)+v.Game.Market.Count(game.Camel) > 7 {
 			return false, &TooManyInHandError{}
 		}
 		if v.Game.Market.Count(game.Camel) == 0 {
@@ -108,7 +108,7 @@ func (v SelectAction) validate(cursor int) (bool, error) {
 		}
 		// sell goods
 	case 3:
-		if len(v.Game.ActivePlayer().Hand) == 0 {
+		if len(v.Game.Players.Active().Hand) == 0 {
 			return false, &NoGoodsInHandError{}
 		}
 		return true, nil

@@ -24,12 +24,14 @@ func (v EndRound) View() string {
 	var s = tui.TitleStyle.Render("End of round!")
 	s += "\n\n"
 	s += "Scores:\n"
-	for _, player := range v.Game.Players {
-		s += fmt.Sprintf("%s: %d\n", player.Name, player.Score)
-	}
+	// player 1
+	p1 := v.Game.Players.Get(0)
+	p2 := v.Game.Players.Get(1)
+	s += fmt.Sprintf("%s: %d\n", p1.Name, p1.Score)
+	// player 2
+	s += fmt.Sprintf("%s: %d\n", p2.Name, p2.Score)
 
-	s += fmt.Sprintf("\nWinner: %s\n\n", v.Game.RoundWinner().Name)
-
+	s += fmt.Sprintf("\nWinner: %s\n\n", v.Game.Players.HigestScoring().Name)
 	s += "Press enter to start the next round"
 	return s
 }

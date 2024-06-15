@@ -20,8 +20,8 @@ func (v NameEntry) Init() tea.Cmd {
 }
 
 func (v NameEntry) View() string {
-	var pString = fmt.Sprintf("Player %d", *v.Game.ActivePlayerIdx+1)
-	return fmt.Sprintf("%s player's name:\n> %s", pString, v.Game.ActivePlayer().Name)
+	var pString = fmt.Sprintf("Player %d", v.Game.Players.ActiveIdx+1)
+	return fmt.Sprintf("%s player's name:\n> %s", pString, v.Game.Players.Active().Name)
 }
 
 func (v NameEntry) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -29,13 +29,12 @@ func (v NameEntry) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (v NameEntry) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
-	var p = v.Game.ActivePlayer()
+	var p = v.Game.Players.Active()
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "enter" {
-			*v.Game.ActivePlayerIdx++
-			if *v.Game.ActivePlayerIdx > 1 {
-				*v.Game.ActivePlayerIdx = 0
+			v.Game.Players.Next()
+			if v.Game.Players.Get(1).Name != "" {
 				return v, nil, "selectActionMenu", nil
 			}
 			return v, nil, "", nil

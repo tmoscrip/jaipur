@@ -55,3 +55,59 @@ func (p *Player) RemoveIndexesFromHand(indexes []int) []ResourceType {
 func (p *Player) AddScore(score int) {
 	p.Score = p.Score + score
 }
+
+func (p *Player) WonRound() {
+	p.Rounds++
+}
+
+func (p *Player) setHand(hand []ResourceType) {
+	p.Hand = hand
+}
+
+type Players struct {
+	players   []Player
+	ActiveIdx int
+}
+
+func (p *Players) Active() *Player {
+	return &p.players[p.ActiveIdx]
+}
+
+func (p *Players) Get(i int) *Player {
+	return &p.players[i]
+}
+
+func (p *Players) Next() *Player {
+	p.ActiveIdx = (p.ActiveIdx + 1) % 2
+	return &p.players[p.ActiveIdx]
+}
+
+func (p *Players) Add(player Player) {
+	p.players = append(p.players, player)
+	if len(p.players) > 2 {
+		panic("Too many players")
+	}
+}
+
+func (p *Players) Herd(i int) int {
+	return p.players[i].Herd
+}
+
+// Returns the player with the highest score, or nil if the scores are tied.
+func (p *Players) HigestScoring() *Player {
+	if p.players[0].Score == p.players[1].Score {
+		return nil
+	}
+
+	var winner = &p.players[0]
+	for i := 1; i < 2; i++ {
+		if p.players[i].Score > winner.Score {
+			winner = &p.players[i]
+		}
+	}
+	return winner
+}
+
+func (p *Players) AddScore(idx int, score int) {
+	p.players[idx].Score += score
+}

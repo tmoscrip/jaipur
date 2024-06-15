@@ -2,8 +2,6 @@ package game
 
 import (
 	"math/rand/v2"
-
-	"github.com/tmoscrip/jaipur/internal/logger"
 )
 
 type Deck struct {
@@ -34,7 +32,6 @@ func NewDeck() Deck {
 		d.cards = append(d.cards, Camel)
 	}
 
-	logger.Message("Shuffling deck")
 	for i := range d.cards {
 		j := rand.IntN(i + 1)
 		d.cards[i], d.cards[j] = d.cards[j], d.cards[i]

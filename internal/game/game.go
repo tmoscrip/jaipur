@@ -5,57 +5,27 @@ import (
 )
 
 type Game struct {
-	Deck            Deck
-	Discarded       []ResourceType
-	BonusTokens     map[int][]int // cards required -> points awarded
-	ResourceTokens  map[ResourceType][]int
-	Market          Market
-	Players         []Player
-	ActivePlayerIdx *int
-}
-
-// Returns the player with the highest score, or nil if the scores are tied.
-func (g *Game) RoundWinner() *Player {
-	if g.Players[0].Score == g.Players[1].Score {
-		return nil
-	}
-
-	var winner = &g.Players[0]
-	for i := 1; i < 2; i++ {
-		if g.Players[i].Score > winner.Score {
-			winner = &g.Players[i]
-		}
-	}
-	return winner
+	Deck           Deck
+	Discarded      []ResourceType
+	BonusTokens    BonusTokens
+	ResourceTokens ResourceTokens
+	Market         Market
+	Players        Players
 }
 
 func NewGame() Game {
 	var g = Game{}
-	g.ActivePlayerIdx = new(int)
-	g.Players = make([]Player, 2)
+	g.Players = Players{}
 	g.Deck = NewDeck()
 	g.Discarded = make([]ResourceType, 0)
 
-	g.Market = Market{}
-	for i := 0; i < 3; i++ {
-		g.Market = append(g.Market, Camel)
-	}
+	g.Market = NewMarket()
 
 	drawn, _ := g.Deck.Draw(2)
 	g.Market = append(g.Market, drawn...)
 
-	g.BonusTokens = make(map[int][]int)
-	g.BonusTokens[3] = []int{3, 3, 2, 2, 2, 1, 1}
-	g.BonusTokens[4] = []int{6, 6, 5, 5, 4, 4}
-	g.BonusTokens[5] = []int{10, 10, 8, 8, 6}
-
-	g.ResourceTokens = make(map[ResourceType][]int)
-	g.ResourceTokens[Diamond] = []int{7, 7, 5, 5, 5}
-	g.ResourceTokens[Gold] = []int{6, 6, 5, 5, 5}
-	g.ResourceTokens[Silver] = []int{5, 5, 5, 5, 5}
-	g.ResourceTokens[Cloth] = []int{5, 3, 3, 2, 2, 1, 1}
-	g.ResourceTokens[Spice] = []int{5, 3, 3, 2, 2, 1, 1}
-	g.ResourceTokens[Leather] = []int{4, 3, 2, 1, 1, 1, 1, 1, 1}
+	g.BonusTokens = newBonusTokens()
+	g.ResourceTokens = newResourceTokens()
 
 	for i := 0; i < 2; i++ {
 		var player = Player{}
@@ -69,14 +39,10 @@ func NewGame() Game {
 			drawn, _ := g.Deck.Draw(1)
 			player.Hand = append(player.Hand, drawn...)
 		}
-		g.Players[i] = player
+		g.Players.Add(player)
 	}
 
 	return g
-}
-
-func (g *Game) ActivePlayer() *Player {
-	return &g.Players[*g.ActivePlayerIdx]
 }
 
 type TooManyInHandError struct{}
@@ -86,7 +52,7 @@ func (e *TooManyInHandError) Error() string {
 }
 
 func (g *Game) PlayerTakeOne(marketIndex int) (bool, error) {
-	g.ActivePlayer().Hand = append(g.ActivePlayer().Hand, g.Market[marketIndex])
+	g.Players.Active().Hand = append(g.Players.Active().Hand, g.Market[marketIndex])
 	drawn, _ := g.Deck.Draw(1)
 	g.Market[marketIndex] = drawn[0]
 	if g.nextPlayer() {
@@ -105,11 +71,11 @@ func (g *Game) PlayerTakeCamels() (bool, error) {
 	if g.Market.Count(Camel) == 0 {
 		return false, &NoCamelsInMarketError{}
 	}
-	if g.Market.Count(Camel)+len(g.ActivePlayer().Hand) > 7 {
+	if g.Market.Count(Camel)+len(g.Players.Active().Hand) > 7 {
 		return false, &TooManyInHandError{}
 	}
 	originalMarket := g.Market
-	herd := g.ActivePlayer().Herd
+	herd := g.Players.Active().Herd
 	newMarket := make([]ResourceType, 0)
 	for i := 0; i < len(originalMarket); i++ {
 		if originalMarket[i] == Camel {
@@ -119,7 +85,7 @@ func (g *Game) PlayerTakeCamels() (bool, error) {
 			newMarket = append(newMarket, originalMarket[i])
 		}
 	}
-	g.ActivePlayer().Herd = herd
+	g.Players.Active().Herd = herd
 	g.Market = newMarket
 	if g.nextPlayer() {
 		return true, nil
@@ -142,15 +108,15 @@ func (g *Game) PlayerTakeMultiple(hand []int, market []int) (bool, error) {
 		return false, &TakeMultipleCountMismatch{}
 	}
 
-	newHand := g.ActivePlayer().Hand
+	newHand := g.Players.Active().Hand
 	for i := 0; i < len(hand); i++ {
-		handCard := g.ActivePlayer().Hand[hand[i]]
+		handCard := g.Players.Active().Hand[hand[i]]
 		marketCard := g.Market[market[i]]
 		newHand[hand[i]] = marketCard
 		g.Market[market[i]] = handCard
 	}
 
-	g.ActivePlayer().Hand = newHand
+	g.Players.Active().Hand = newHand
 	if g.nextPlayer() {
 		return true, nil
 	}
@@ -175,10 +141,19 @@ func (e *SellCardsMismatchedResourcesError) Error() string {
 	return "You can only sell one type of resource at a time"
 }
 
+type NoResourceSelectedError struct{}
+
+func (e *NoResourceSelectedError) Error() string {
+	return "You must select at least one resource to sell"
+}
+
 func (g *Game) PlayerSellCards(indexes []int) (bool, error) {
+	if len(indexes) == 0 {
+		return false, &NoResourceSelectedError{}
+	}
 	mismatch := false
 	for i := 0; i < len(indexes)-1; i++ {
-		if g.ActivePlayer().Hand[indexes[i]] != g.ActivePlayer().Hand[indexes[i+1]] {
+		if g.Players.Active().Hand[indexes[i]] != g.Players.Active().Hand[indexes[i+1]] {
 			mismatch = true
 			break
 		}
@@ -188,20 +163,20 @@ func (g *Game) PlayerSellCards(indexes []int) (bool, error) {
 		return false, &SellCardsMismatchedResourcesError{}
 	}
 
-	rt := g.ActivePlayer().Hand[indexes[0]]
+	rt := g.Players.Active().Hand[indexes[0]]
 
 	if rt == Diamond || rt == Gold || rt == Silver {
 		if len(indexes) < 2 {
 			return false, &MustSellTwoCardsError{}
 		}
 	}
-	removedResources := g.ActivePlayer().RemoveIndexesFromHand(indexes)
+	removedResources := g.Players.Active().RemoveIndexesFromHand(indexes)
 	g.AddToDiscard(removedResources)
 
 	for i := 0; i < len(indexes); i++ {
-		g.ActivePlayer().AddScore(g.nextResourceToken(rt))
+		g.Players.Active().AddScore(g.ResourceTokens.Next(rt))
 	}
-	g.ActivePlayer().AddScore(g.nextBonusToken(len(indexes)))
+	g.Players.Active().AddScore(g.BonusTokens.Next(len(indexes)))
 	if g.nextPlayer() {
 		return true, nil
 	}
@@ -228,9 +203,8 @@ func (g *Game) ShouldRoundEnd() bool {
 }
 
 func (g *Game) nextPlayer() bool {
-	g.ActivePlayer().MoveCamelsToHerd()
-	newIdx := (*g.ActivePlayerIdx + 1) % 2
-	*g.ActivePlayerIdx = newIdx
+	g.Players.Active().MoveCamelsToHerd()
+	g.Players.Next()
 
 	// refill market
 	newMarket := g.Market
@@ -243,15 +217,15 @@ func (g *Game) nextPlayer() bool {
 
 	if g.ShouldRoundEnd() {
 		// score camels, player with most gets 5 points
-		player0Camels := g.Players[0].Herd
-		player1Camels := g.Players[1].Herd
+		player0Camels := g.Players.Herd(0)
+		player1Camels := g.Players.Herd(1)
 		if player0Camels > player1Camels {
-			g.Players[0].AddScore(5)
+			g.Players.AddScore(0, 5)
 		} else if player1Camels > player0Camels {
-			g.Players[1].AddScore(5)
+			g.Players.AddScore(1, 5)
 		}
-		if g.RoundWinner() != nil {
-			g.RoundWinner().Rounds++
+		if g.Players.HigestScoring() != nil {
+			g.Players.HigestScoring().WonRound()
 		}
 		return true
 	}
@@ -261,30 +235,10 @@ func (g *Game) nextPlayer() bool {
 func (g *Game) StartRound() {
 	newGame := NewGame()
 	players := newGame.Players
-	players[0].Rounds = g.Players[0].Rounds
-	players[1].Rounds = g.Players[1].Rounds
+	players.Get(0).Rounds = g.Players.Get(0).Rounds
+	players.Get(1).Rounds = g.Players.Get(1).Rounds
 	newGame.Players = players
 	*g = newGame
-}
-
-func (g *Game) nextResourceToken(rt ResourceType) int {
-	if len(g.ResourceTokens[rt]) == 0 {
-		return 0
-	}
-
-	var score = g.ResourceTokens[rt][0]
-	g.ResourceTokens[rt] = g.ResourceTokens[rt][1:]
-	return score
-}
-
-func (g *Game) nextBonusToken(cardsScored int) int {
-	if len(g.BonusTokens[cardsScored]) == 0 {
-		return 0
-	}
-
-	var score = g.BonusTokens[cardsScored][0]
-	g.BonusTokens[cardsScored] = g.BonusTokens[cardsScored][1:]
-	return score
 }
 
 type ResourceType int

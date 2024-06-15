@@ -32,12 +32,12 @@ type SellCards struct {
 	Cursor  *int
 }
 
-func NewSellCards(game *game.Game) SellCards {
-	options := make([]sellCardsOption, len(game.ActivePlayer().Hand))
-	for i, card := range game.ActivePlayer().Hand {
+func NewSellCards(g *game.Game) SellCards {
+	options := make([]sellCardsOption, len(g.Players.Active().Hand))
+	for i, card := range g.Players.Active().Hand {
 		options[i] = sellCardsOption{Index: i, Label: card.String(), Selected: false}
 	}
-	return SellCards{Game: game, options: options, Cursor: new(int)}
+	return SellCards{Game: g, options: options, Cursor: new(int)}
 }
 
 func (v SellCards) Init() tea.Cmd {
@@ -70,7 +70,7 @@ func (v SellCards) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 			}
 		}
 		if msg.String() == "down" {
-			if *v.Cursor < len(v.Game.ActivePlayer().Hand)-1 {
+			if *v.Cursor < len(v.Game.Players.Active().Hand)-1 {
 				*v.Cursor = *v.Cursor + 1
 			}
 		}

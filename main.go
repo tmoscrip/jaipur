@@ -151,13 +151,13 @@ func (m MainModel) View() string {
 		menuLeft := ""
 		menuRight := ""
 
-		menuLeft += fmt.Sprintf("Player %d: %s        Rounds: %d\n", *m.Game.ActivePlayerIdx+1, m.Game.ActivePlayer().Name, m.Game.ActivePlayer().Rounds)
-		menuLeft += fmt.Sprintf("Score: %d            Herd: %d\n", m.Game.ActivePlayer().Score, m.Game.ActivePlayer().Herd)
+		menuLeft += fmt.Sprintf("Player %d: %s        Rounds: %d\n", m.Game.Players.ActiveIdx+1, m.Game.Players.Active().Name, m.Game.Players.Active().Rounds)
+		menuLeft += fmt.Sprintf("Score: %d            Herd: %d\n", m.Game.Players.Active().Score, m.Game.Players.Active().Herd)
 		if len(m.Game.Discarded) > 0 {
 			menuLeft += fmt.Sprintf("Discarded\n%s\n", m.formatDiscarded())
 		}
 		menuLeft += formatCardRow(m.Game.Market, "Market")
-		menuLeft += formatCardRow(m.Game.ActivePlayer().Hand, "Hand")
+		menuLeft += formatCardRow(m.Game.Players.Active().Hand, "Hand")
 
 		columns := m.formatRemainingTokensColumn()
 		rightStyle := lipgloss.NewStyle().Width(tui.Width - lipgloss.Width(menuLeft) - lipgloss.Width(columns)).Align(lipgloss.Right)

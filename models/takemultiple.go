@@ -21,35 +21,31 @@ type takeMultipleOption struct {
 var TableBorder = lipgloss.NewStyle().Foreground(tui.Silver).Background(lipgloss.Color("#000000"))
 
 func (m takeMultipleOption) FormatRight(activeCol int, activeCursor int) string {
-	var cursor = fmt.Sprintf(" ")
+	var cursor = " "
 	if m.column == activeCol && m.Index == activeCursor {
-		cursor = fmt.Sprintf(">")
+		cursor = ">"
 	}
-	var checked = fmt.Sprintf(" ")
+	var checked = " "
 	if m.Selected {
-		checked = fmt.Sprintf("x")
+		checked = "x"
 	}
 	return fmt.Sprintf("%s [%s] %s", cursor, checked, m.Label)
 }
 
 func (m takeMultipleOption) FormatLeft(activeCol int, activeCursor int) string {
-	var cursor = fmt.Sprintf(" ")
+	var cursor = " "
 	if m.column == activeCol && m.Index == activeCursor {
-		cursor = fmt.Sprintf("<")
+		cursor = "<"
 	}
-	var checked = fmt.Sprintf(" ")
+	var checked = " "
 	if m.Selected {
-		checked = fmt.Sprintf("x")
+		checked = "x"
 	}
 	return fmt.Sprintf("%s [%s] %s", m.Label, checked, cursor)
 }
 
 func (m takeMultipleOption) CursorActive(cursorIdx int) bool {
 	return cursorIdx == m.Index
-}
-
-func (m takeMultipleOption) columnActive(columnIdx int) bool {
-	return columnIdx == m.column
 }
 
 type TakeMultiple struct {
@@ -70,7 +66,7 @@ func NewTakeMultiple(game *game.Game) TakeMultiple {
 	columns := make(map[int]map[int]takeMultipleOption)
 	columns[0] = hand
 	columns[1] = market
-	for i, card := range game.ActivePlayer().Hand {
+	for i, card := range game.Players.Active().Hand {
 		hand[i] = takeMultipleOption{column: 0, Label: card.String(), Selected: false, Index: i}
 	}
 	for i, card := range game.Market {
@@ -89,8 +85,8 @@ func (v TakeMultiple) View() string {
 	s += "\n"
 
 	var max = 0
-	if len(v.Game.ActivePlayer().Hand) > len(v.Game.Market) {
-		max = len(v.Game.ActivePlayer().Hand)
+	if len(v.Game.Players.Active().Hand) > len(v.Game.Market) {
+		max = len(v.Game.Players.Active().Hand)
 	} else {
 		max = len(v.Game.Market)
 	}

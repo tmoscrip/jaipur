@@ -5,7 +5,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/tmoscrip/jaipur/internal/game"
-	"github.com/tmoscrip/jaipur/internal/logger"
 	"github.com/tmoscrip/jaipur/internal/tui"
 )
 
@@ -51,8 +50,6 @@ func (v TakeOne) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (v TakeOne) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		logger.Message(fmt.Sprintf("cursor: %d", *v.Cursor))
-		logger.Message(fmt.Sprintf("key: %s", msg.String()))
 		if msg.String() == "b" {
 			if *v.confirming {
 				*v.confirming = false
@@ -68,18 +65,14 @@ func (v TakeOne) MyUpdate(msg tea.Msg) (tea.Model, tea.Cmd, string, error) {
 		if msg.String() == "down" && !*v.confirming {
 			if *v.Cursor < len(v.Game.Market)-1 {
 				*v.Cursor = *v.Cursor + 1
-				logger.Message(fmt.Sprintf("new cursor: %d", *v.Cursor))
 			}
 		}
 		if msg.String() == "enter" {
-			logger.Message(fmt.Sprintf("selected good: %s", v.Game.Market[*v.Cursor]))
 			if !*v.confirming {
-				logger.Message("confirming")
 				*v.confirming = true
 				return v, nil, "", nil
 			}
 			if *v.confirming {
-				logger.Message("comfirmed, next player turn")
 				*v.confirming = false
 				endRound, _ := v.Game.PlayerTakeOne(*v.Cursor)
 				if endRound {
